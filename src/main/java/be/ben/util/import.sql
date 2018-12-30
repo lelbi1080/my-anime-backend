@@ -1,0 +1,11 @@
+Update mangagenerale set anime_id=NULL;
+Delete from Anime;
+delete from anime_manga;
+delete from anime_mangagenerale;
+Update manga set anime_id=NULL;
+delete from mangagenerale where title='Nisekoi:';
+delete from mangagenerale where title='Nisekoi:';
+delete from mangagenerale where title='Nisekoi';
+delete from mangagenerale where title='Nisekoi: OVA';
+delete from mangagenerale where title='Nisekoi OVA';
+delete from test_a;
