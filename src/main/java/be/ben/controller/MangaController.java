@@ -82,8 +82,8 @@ public class MangaController {
     @RequestMapping("/addMangas")
     public String addMangas() {
         try {
-            mangaXd.addManga();
-            //otakuFr.addManga();
+            //   mangaXd.addManga();
+            otakuFr.addManga();
             //universAnime.addManga();
             //teleManga.addManga();
             return "Ok";
