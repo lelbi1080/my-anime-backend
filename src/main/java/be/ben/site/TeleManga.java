@@ -1,13 +1,13 @@
 package be.ben.site;
 
 import be.ben.repository.Episode;
+import be.ben.repository.EpisodeId;
 import be.ben.repository.Manga;
-import be.ben.service.dao.MangaService;
+import be.ben.repository.Video;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -16,9 +16,9 @@ import java.io.IOException;
 @Component
 public class TeleManga extends Site {
 
-    @Autowired
-    private MangaService mangaService;
+
     private String urlMangas = "http://www.telemanga.net/classement.php?lettre=";
+
 
     @Override
     @Scheduled(fixedRate = 60000, initialDelay = 0)
@@ -72,6 +72,17 @@ public class TeleManga extends Site {
                     manga.setTitleOriginal(titleManga);
 
                     mangaService.save(manga);
+                    try {
+                        doc = Jsoup.connect(urlMangaPage)
+                                .userAgent("Mozilla")
+                                .get();
+                        Elements episodes = doc.select("div[class=entry-content]").select("a");
+
+
+                        episodeAdd(episodes, titleManga, manga);
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
                 }
             }
 
@@ -107,6 +118,19 @@ public class TeleManga extends Site {
                         manga.setTitleOriginal(titleManga);
 
                         mangaService.save(manga);
+                        try {
+                            doc = Jsoup.connect(urlMangaPage)
+                                    .userAgent("Mozilla")
+                                    .get();
+                            Elements episodes = doc.select("div[class=entry-content]").select("a");
+
+
+                            episodeAdd(episodes, titleManga, manga);
+                        } catch (Exception ex) {
+                            ex.printStackTrace();
+                        }
+
+
                     }
                 }
 
@@ -123,15 +147,80 @@ public class TeleManga extends Site {
     @Override
     public void addVideo(Episode episode) {
 
+
+        Document doc = null;
+        try {
+            doc = Jsoup.connect(episode.getUrl()).get();
+            Elements elements = doc.select("a[target=_blank]");
+            for (Element e : elements) {
+                String urlVideo = e.attr("href");
+                Video video = new Video();
+                video.setEpisode(episode);
+                video.setUrl(urlVideo);
+                videoService.save(video);
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+       /*
+        Elements providers = doc.select("a[class=provider]");
+        String urlProvider;
+        for (int j = 0; j < providers.size(); j++) {
+            Video video2 = new Video();
+            video2.setEpisode(episode);
+            urlProvider = providers.get(j).attr("href");
+            Document doc2 = null;
+            try {
+                doc2 = Jsoup.connect(urlProvider).get();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            Elements links = doc2.select("iframe[class=iframe]");
+            String videos = links.get(0).attr("src");
+            video2.setUrl(videos);
+            videoService.save(video2);*/
     }
 
     public void addVideo(String urlEpisode, Episode episode) throws IOException {
 
     }
 
+
     @Override
     public String getMaxPage(String url) {
         return null;
+    }
+
+    private void episodeAdd(Elements episodes, String title, Manga mangaAdd) throws IOException {
+        int j = 1;
+        for (int i = 2; i < episodes.size(); i++) {
+            EpisodeId episodeId = new EpisodeId();
+            String url = episodes.get(i).attr("href");
+            if (url != "") {
+
+
+                String url2 = url;
+                int ept = url.indexOf("/ep-") + 4;
+                int end = url.indexOf("-vost");
+                String ep = "";
+                try {
+                    ep = url.substring(ept, end);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+                episodeId.setNumEp(ep);
+                episodeId.setTitleManga(title);
+                Episode episode = new Episode();
+                episode.setEpisode_id(episodeId);
+                episode.setManga(mangaAdd);
+                episode.setUrl(url);
+                episodeService.save(episode);
+                addVideo(episode);
+            }
+            j++;
+        }
     }
 
 

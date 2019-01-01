@@ -133,12 +133,7 @@ public class OtakuFr extends Site {
             String url2 = url.substring(0, url.length() - 1);
             int x = url2.lastIndexOf("/");
             String ep = "";
-            if (j < 10) {
-                ep = url2.substring(++x, url.length() - 1);
-                ep = "0" + ep;
-            } else {
-                ep = url2.substring(++x, url.length() - 1);
-            }
+            ep = url2.substring(++x, url.length() - 1);
             episodeId.setNumEp(ep);
             episodeId.setTitleManga(title);
             Episode episode = new Episode();
@@ -146,7 +141,7 @@ public class OtakuFr extends Site {
             episode.setManga(mangaAdd);
             episode.setUrl(url);
             episodeService.save(episode);
-            addVideo(episode);
+            //  addVideo(episode);
             j++;
         }
     }

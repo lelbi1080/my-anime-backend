@@ -93,6 +93,9 @@ public class MangaXd extends Site {
             String ep = episodes.get(i).text();
             int index = ep.lastIndexOf(' ');
             String nep = ep.substring(++index);
+            double nepInt = Double.parseDouble(nep);
+            int nepnep = (int) nepInt;
+            nep = String.valueOf(nepnep);
             episodeId.setNumEp(nep);
             episodeId.setTitleManga(title);
             Episode episode = new Episode();
@@ -100,7 +103,7 @@ public class MangaXd extends Site {
             episode.setManga(mangaAdd);
             episode.setUrl(episodes.get(i).attr("href"));
             episodeService.save(episode);
-            addVideo(episode);
+            //addVideo(episode);
             j++;
         }
     }
