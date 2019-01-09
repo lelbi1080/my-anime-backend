@@ -17,7 +17,9 @@ public class Video {
     @ManyToOne
     @JoinColumns({
             @JoinColumn(name = "numEp", insertable = true, updatable = true),
-            @JoinColumn(name = "titleManga", insertable = true, updatable = true)
+            @JoinColumn(name = "titleManga", insertable = true, updatable = true),
+            @JoinColumn(name = "type", insertable = true, updatable = true)
+
     })
     private Episode episode;
 

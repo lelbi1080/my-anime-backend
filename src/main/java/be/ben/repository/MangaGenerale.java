@@ -19,7 +19,8 @@ public class MangaGenerale {
     public MangaGenerale() {
     }
 
-    public MangaGenerale(String title, String urlImage) {
+    public MangaGenerale(int id, String title, String urlImage) {
+        this.id = id;
         this.title = title;
         this.urlImage = urlImage;
     }

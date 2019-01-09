@@ -22,4 +22,5 @@ public interface MangaService extends JpaRepository<Manga, Integer> {
     @Query("SELECT m FROM Manga m WHERE m.title LIKE CONCAT(:title,'%')")
     List<Manga> findMangaWithPartOfTitle(@Param("title") String title);
 
+
 }

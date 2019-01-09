@@ -1,19 +1,22 @@
 package be.ben.controller;
 
+import be.ben.repository.Anime;
 import be.ben.repository.Episode;
-import be.ben.repository.EpisodeId;
 import be.ben.repository.Manga;
 import be.ben.repository.Video;
+import be.ben.service.dao.AnimeService;
+import be.ben.service.dao.EpisodeService;
 import be.ben.service.dao.MangaService;
 import be.ben.service.dao.VideoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 public class VideoController {
@@ -26,17 +29,26 @@ public class VideoController {
     @Autowired
     private VideoService videoService;
 
+    @Autowired
+    private AnimeService animeService;
+
+    @Autowired
+    private EpisodeService episodeService;
+
 
     @CrossOrigin
-    @RequestMapping("/videosDb")
-    public List<Video> getVideoDb() throws IOException {
-        Optional<Manga> manga = mangaService.findById(1);
-        EpisodeId episodeId = new EpisodeId();
-        episodeId.setTitleManga(manga.get().getTitle());
-        episodeId.setNumEp("");
-        Episode episode = new Episode();
-        episode.setEpisode_id(episodeId);
-        return videoService.getVideoByEpisode(episode);
+    @RequestMapping("/videos/{titleGenerale}/{numEp}")
+    public List<Video> getVideoDb(@PathVariable String titleGenerale, @PathVariable String numEp) throws IOException {
+        int id = animeService.findByTitleGenerale(titleGenerale);
+        Anime a = animeService.findAnimeById(id);
+        List<Video> videos = new ArrayList<>();
+        for (Manga m : a.getMangaList()) {
+            for (Episode e : episodeService.findByNumEpAndManga_Title(numEp, m.getTitle(), m.getType())) {
+                videos.addAll(e.getVideos());
+            }
+            //videos.addAll(episodeService.f)
+        }
+        return videos;
 
 
     }

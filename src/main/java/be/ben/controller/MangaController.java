@@ -82,10 +82,11 @@ public class MangaController {
     @RequestMapping("/addMangas")
     public String addMangas() {
         try {
-//               mangaXd.addManga();
-            //otakuFr.addManga();
+            mangaXd.addManga();
+            teleManga.addManga();
+            otakuFr.addManga();
             universAnime.addManga();
-            // teleManga.addManga();
+
             return "Ok";
         } catch (QueryException e) {
             return "Error " + e.getQueryString();
@@ -131,7 +132,7 @@ public class MangaController {
                     System.out.println(myGeneraleList.get(j).getTitle().length() / 4);
                     System.out.println(distancesPair.get(k).getValue());
                 }
-                if (min <= myGeneraleList.get(j).getTitle().length() / 4 && distancesPair.get(k).getValue() <= myGeneraleList.get(j).getTitle().length() / 4) {
+                if (min <= myGeneraleList.get(j).getTitle().length() / 50 && distancesPair.get(k).getValue() <= myGeneraleList.get(j).getTitle().length() / 50) {
                     if (min <= distancesPair.get(k).getValue()) {
                         mangasToLink.add(distancesPair.get(k).getKey());
 
@@ -209,7 +210,7 @@ public class MangaController {
     @RequestMapping("/start")
     public String start() {
         try {
-            System.out.println("Start sql ....");
+            /*System.out.println("Start sql ....");
             this.startSql();
             System.out.println("end ");
             System.out.println("start add manga generale");
@@ -224,7 +225,7 @@ public class MangaController {
             System.out.println("add animes");
 
             this.addAnimes();
-            System.out.println("end");
+            System.out.println("end");*/
         } catch (Exception ex) {
             System.out.println(ex.getMessage());
         }
@@ -240,6 +241,40 @@ public class MangaController {
 
     }
 
+
+    @CrossOrigin
+    @RequestMapping("/addOtakuFr")
+    public String addOatkuFr() throws SQLException {
+        this.otakuFr.addManga();
+        return "start completed  ";
+
+    }
+
+    @CrossOrigin
+    @RequestMapping("/addMangaXd")
+    public String addMangaXd() throws SQLException {
+        this.mangaXd.addManga();
+        return "start completed  ";
+
+    }
+
+    @CrossOrigin
+    @RequestMapping("/addUniversAnime")
+    public String addUniversAnime() throws SQLException {
+        this.universAnime.addManga();
+        return "start completed  ";
+
+    }
+
+    @CrossOrigin
+    @RequestMapping("/addTeleManga")
+    public String addTeleManga() throws SQLException {
+        this.teleManga.addManga();
+        return "start completed  ";
+
+    }
+
+
     @CrossOrigin
     @RequestMapping("/afterSql")
     public String after() throws SQLException {
@@ -247,6 +282,14 @@ public class MangaController {
         return "reset completed  ";
 
     }
+
+    @CrossOrigin
+    @RequestMapping("/mangaGenerales/{id}")
+    public MangaGenerale getAnimeMangaGenerale(@PathVariable int id) throws SQLException {
+        return this.mangaGeneraleService.findMangaGeneraleById(id);
+
+    }
+
 
 
 }

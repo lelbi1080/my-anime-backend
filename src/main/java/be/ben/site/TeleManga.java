@@ -212,6 +212,7 @@ public class TeleManga extends Site {
                 }
                 episodeId.setNumEp(ep);
                 episodeId.setTitleManga(title);
+                episodeId.setType(mangaAdd.getType());
                 Episode episode = new Episode();
                 episode.setEpisode_id(episodeId);
                 episode.setManga(mangaAdd);

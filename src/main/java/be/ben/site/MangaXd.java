@@ -72,11 +72,17 @@ public class MangaXd extends Site {
                 //System.out.println(link.child(0).text());
                 mangaAdd.setTitle(link.child(0).text());
                 mangaAdd.setTitleOriginal(link.child(0).text());
-                Document docc = Jsoup.connect("https://www.mangaxd.com/anime/" + titleRefactor).get();
+                try {
+                    Document docc = Jsoup.connect("https://www.mangaxd.com/anime/" + titleRefactor).get();
+                    mangaService.save(mangaAdd);
+                    episodeAdd(docc.select("a[class=episode]"), link.child(0).text(), mangaAdd, titleRefactor);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
 
 
-                mangaService.save(mangaAdd);
-                episodeAdd(docc.select("a[class=episode]"), link.child(0).text(), mangaAdd, titleRefactor);
+
+
 
 
             }
@@ -86,24 +92,32 @@ public class MangaXd extends Site {
         }
     }
 
-    private void episodeAdd(Elements episodes, String title, Manga mangaAdd, String titleRefractor) throws IOException {
+    private void episodeAdd(Elements episodes, String title, Manga mangaAdd, String titleRefractor) {
         int j = 1;
         for (int i = episodes.size() - 1; i >= 0; i--) {
             EpisodeId episodeId = new EpisodeId();
             String ep = episodes.get(i).text();
             int index = ep.lastIndexOf(' ');
             String nep = ep.substring(++index);
-            double nepInt = Double.parseDouble(nep);
-            int nepnep = (int) nepInt;
-            nep = String.valueOf(nepnep);
+            if (nep.chars().allMatch(Character::isDigit)) {
+                double nepInt = Double.parseDouble(nep);
+                int nepnep = (int) nepInt;
+                nep = String.valueOf(nepnep);
+            }
+
             episodeId.setNumEp(nep);
             episodeId.setTitleManga(title);
+            episodeId.setType(mangaAdd.getType());
             Episode episode = new Episode();
             episode.setEpisode_id(episodeId);
             episode.setManga(mangaAdd);
             episode.setUrl(episodes.get(i).attr("href"));
             episodeService.save(episode);
-            //addVideo(episode);
+           /* try {
+                addVideo(episode);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }*/
             j++;
         }
     }

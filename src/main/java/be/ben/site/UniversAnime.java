@@ -3,6 +3,7 @@ package be.ben.site;
 import be.ben.repository.Episode;
 import be.ben.repository.EpisodeId;
 import be.ben.repository.Manga;
+import be.ben.repository.Video;
 import be.ben.service.dao.MangaService;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -21,6 +22,7 @@ public class UniversAnime extends Site {
     @Autowired
     private MangaService mangaService;
     private String urlMangas = "https://www.universanimez.com/liste-des-animes";
+    private String urlSite = "https://www.universanimez.com";
 
     @Override
     public void addManga() {
@@ -118,10 +120,11 @@ public class UniversAnime extends Site {
                         }
                         episodeId.setNumEp(ep);
                         episodeId.setTitleManga(title);
+                        episodeId.setType(mangaAdd.getType());
                         Episode episode = new Episode();
                         episode.setEpisode_id(episodeId);
                         episode.setManga(mangaAdd);
-                        episode.setUrl(url);
+                        episode.setUrl(this.urlSite + url);
                         episodeService.save(episode);
                         addVideo(episode);
                     }
@@ -135,6 +138,29 @@ public class UniversAnime extends Site {
     }
     @Override
     public void addVideo(Episode episode) {
+        Document doc = null;
+        try {
+            doc = Jsoup.connect(episode.getUrl()).get();
+            Elements elements = doc.select("a[target=iframe_a]");
+            for (Element e : elements) {
+                String urlVideo = e.attr("href");
+                Video video = new Video();
+                video.setEpisode(episode);
+                video.setUrl(urlVideo);
+                videoService.save(video);
+            }
+            elements = doc.select("iframe");
+            for (Element e : elements) {
+                String urlVideo = e.attr("src");
+                Video video = new Video();
+                video.setEpisode(episode);
+                video.setUrl(urlVideo);
+                videoService.save(video);
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
     }
 
