@@ -3,6 +3,7 @@ package be.ben.repository;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import javax.persistence.*;
+import java.util.List;
 
 @Entity
 public class MangaGenerale {
@@ -15,6 +16,11 @@ public class MangaGenerale {
     private Integer id;
     private String title;
     private String urlImage;
+    private String urlPage;
+
+    @Column(name = "genres")
+    @ElementCollection(targetClass = String.class)
+    private List<String> genres;
 
     public MangaGenerale() {
     }
@@ -55,5 +61,21 @@ public class MangaGenerale {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public List<String> getGenres() {
+        return genres;
+    }
+
+    public void setGenres(List<String> genres) {
+        this.genres = genres;
+    }
+
+    public String getUrlPage() {
+        return urlPage;
+    }
+
+    public void setUrlPage(String urlPage) {
+        this.urlPage = urlPage;
     }
 }

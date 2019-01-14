@@ -53,15 +53,23 @@ public class MyAnimelList extends Site {
                 }
                 Elements titles = doc.select("a[class=hoverinfo_trigger fw-b fl-l]");
                 for (int i = 0; i < titles.size(); i++) {
-                    //System.out.println(titles.get(i).text());
+
+                   /* Thread.sleep(500);
+                    Document page = Jsoup.connect(titles.get(i).attr("href")).get();
+                    Elements divs= page.select("div:contains(Genres:)").get(5).select("a");
+                    List<String> genres= new ArrayList<>();
+                    for(Element e: divs){
+                        genres.add(e.text());
+                    }*/
                     String anime = titles.get(i).text();
                     MangaGenerale mangaAdd = new MangaGenerale();
+
 
                     MangaGenerale mangaFind = mangaGeneraleService.findByTitle(anime);
                     if (mangaFind != null) {
                         mangaAdd = mangaFind;
                     }
-
+                    mangaAdd.setUrlPage(titles.get(i).attr("href"));
                     mangaAdd.setTitle(anime);
                     mangaAdd.setUrlImage(images.get(i));
                     mangaGeneraleService.save(mangaAdd);
@@ -96,29 +104,50 @@ public class MyAnimelList extends Site {
                     int m = 50;
                     String p = String.valueOf(Math.multiplyExact(i, m));
                     urlBasePage = urlBasePage + p;
-                    doc = Jsoup.connect(urlBasePage).get();
-                    //System.out.println(page.attr("href"));
-                    imgs = doc.select("img[class=lazyload]");
-                    images.clear();
-                    for (Element img : imgs) {
-                        String str = img.attr("data-src");
-                        str = str.replace("r/50x70/", "");
+                    try {
+                        doc = Jsoup.connect(urlBasePage).timeout(0).get();
+                        imgs = doc.select("img[class=lazyload]");
+                        images.clear();
+                        for (Element img : imgs) {
+                            String str = img.attr("data-src");
+                            str = str.replace("r/50x70/", "");
 
-                        images.add(str);
-                    }
-                    Elements titlespage = doc.select("a[class=hoverinfo_trigger fw-b fl-l]");
-                    for (int k = 0; k < titlespage.size(); k++) {
-                        String anime = titlespage.get(k).text();
-                        MangaGenerale mangaAdd = new MangaGenerale();
-
-                        MangaGenerale mangaFind = mangaGeneraleService.findByTitle(anime);
-                        if (mangaFind != null) {
-                            mangaAdd = mangaFind;
+                            images.add(str);
                         }
-                        mangaAdd.setTitle(anime);
-                        mangaAdd.setUrlImage(images.get(k));
-                        mangaGeneraleService.save(mangaAdd);
+                        Elements titlespage = doc.select("a[class=hoverinfo_trigger fw-b fl-l]");
+                        for (int k = 0; k < titlespage.size(); k++) {
+                        /*List<String> genres= new ArrayList<>();
+                        try{
+                            Thread.sleep(500);
+                            Document page = Jsoup.connect(titlespage.get(i).attr("href")).get();
+                            Elements divs= page.select("div:contains(Genres:)").get(5).select("a");
+
+                            for(Element e: divs){
+                                genres.add(e.text());
+                            }
+                        }catch (Exception ex){
+                            ex.printStackTrace();
+                        }*/
+
+                            String anime = titlespage.get(k).text();
+                            MangaGenerale mangaAdd = new MangaGenerale();
+
+
+                            MangaGenerale mangaFind = mangaGeneraleService.findByTitle(anime);
+                            if (mangaFind != null) {
+                                mangaAdd = mangaFind;
+                            }
+                            //mangaAdd.setGenres(genres);
+                            mangaAdd.setTitle(anime);
+                            mangaAdd.setUrlPage(titlespage.get(k).attr("href"));
+                            mangaAdd.setUrlImage(images.get(k));
+                            mangaGeneraleService.save(mangaAdd);
+                        }
+                    } catch (Exception ex) {
+                        System.out.println(ex.getMessage());
                     }
+                    //System.out.println(page.attr("href"));
+
                 }
             }
 

@@ -18,6 +18,8 @@ public interface MangaGeneraleService extends JpaRepository<MangaGenerale, Integ
             " like concat(:first,'%') ")
     public List<MangaGenerale> findByAnimeNotNull(String first);
 
+    public List<MangaGenerale> findByAnimeNotNull();
+
 
     public MangaGenerale getMangaGeneraleByTitle(String title);
 

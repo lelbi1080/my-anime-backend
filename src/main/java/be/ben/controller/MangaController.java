@@ -9,8 +9,13 @@ import be.ben.service.dao.MangaGeneraleService;
 import be.ben.service.dao.MangaService;
 import be.ben.site.*;
 import be.ben.util.DataBase;
+import be.ben.util.Genre;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.QueryException;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -189,6 +194,59 @@ public class MangaController {
     }
 
     @CrossOrigin
+    @RequestMapping("/addGenre")
+    public void addGenre() {
+        List<Anime> animes = animeService.findAll();
+        for (Anime anime : animes) {
+            MangaGenerale mangaGenerale = anime.getMangaGenerale();
+            List<String> genres = new ArrayList<>();
+            if (mangaGenerale.getUrlImage() != null) {
+                try {
+                    Thread.sleep(500);
+                    Document page = Jsoup.connect(mangaGenerale.getUrlPage()).get();
+                    Elements divs = page.select("div:contains(Genres:)").get(5).select("a");
+
+                    for (Element e : divs) {
+                        genres.add(e.text());
+                    }
+                    mangaGenerale.setGenres(genres);
+                    mangaGeneraleService.save(mangaGenerale);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }
+    }
+
+    @CrossOrigin
+    @RequestMapping("/animes/search/{genre}")
+    public Set<Anime> searchByGenre(@PathVariable Genre genre) {
+        Set<Anime> animes = new HashSet<>();
+        List<Anime> animesList = animeService.findAll();
+        for (String s : genre.getGenres()) {
+            for (Anime a : animesList) {
+                for (String g : a.getMangaGenerale().getGenres()) {
+                    if (g.equals(s)) {
+                        animes.add(a);
+                        break;
+                    }
+                }
+            }
+        }
+        return animes;
+    }
+
+    @CrossOrigin
+    @RequestMapping("/test2")
+    public Set<Anime> tets2() {
+        List<String> genres = new ArrayList<>();
+        genres.add("Seinen");
+        // genres.add("Drama");
+        Genre genre = new Genre(genres);
+        return searchByGenre(genre);
+
+    }
+    @CrossOrigin
     @RequestMapping("/animes/title")
     public List<String> animesTitle() {
         return mangaGeneraleService.getAllTitleMapped();
@@ -204,6 +262,12 @@ public class MangaController {
             return mangas.subList(start, end);
         }
 
+    }
+
+    @CrossOrigin
+    @RequestMapping("/animesMapped/{first}")
+    public List<MangaGenerale> animesMappedLetters(@PathVariable String first) {
+        return mangaGeneraleService.findByAnimeNotNull(first);
     }
 
     @CrossOrigin
