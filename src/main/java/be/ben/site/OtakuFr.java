@@ -46,7 +46,7 @@ public class OtakuFr extends Site {
         try {
 
 
-            doc = Jsoup.connect(url)
+            doc = Jsoup.connect(url).timeout(60000)
                     .userAgent("Mozilla")
                     .get();
 
@@ -69,7 +69,7 @@ public class OtakuFr extends Site {
                 mangaAdd.setTitleOriginal(title);
                 mangaService.save(mangaAdd);
                 try {
-                    doc = Jsoup.connect(href)
+                    doc = Jsoup.connect(href).timeout(60000)
                             .userAgent("Mozilla")
                             .get();
                     Elements episodes = doc.select("ul[class=lst]").select("li");
@@ -91,7 +91,7 @@ public class OtakuFr extends Site {
     public void addVideo(Episode episode) {
         Document doc = null;
         try {
-            doc = Jsoup.connect(episode.getUrl()).get();
+            doc = Jsoup.connect(episode.getUrl()).timeout(60000).get();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -104,7 +104,7 @@ public class OtakuFr extends Site {
             urlProvider = providers.get(j).attr("href");
             Document doc2 = null;
             try {
-                doc2 = Jsoup.connect(urlProvider).get();
+                doc2 = Jsoup.connect(urlProvider).timeout(60000).get();
             } catch (IOException e) {
                 e.printStackTrace();
             }

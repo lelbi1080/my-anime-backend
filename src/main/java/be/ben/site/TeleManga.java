@@ -38,7 +38,7 @@ public class TeleManga extends Site {
         try {
 
             String a = "09";
-            doc = Jsoup.connect(url + a)
+            doc = Jsoup.connect(url + a).timeout(60000)
                     .userAgent("Mozilla")
                     .get();
 
@@ -73,7 +73,7 @@ public class TeleManga extends Site {
 
                     mangaService.save(manga);
                     try {
-                        doc = Jsoup.connect(urlMangaPage)
+                        doc = Jsoup.connect(urlMangaPage).timeout(60000)
                                 .userAgent("Mozilla")
                                 .get();
                         Elements episodes = doc.select("div[class=entry-content]").select("a");
@@ -89,7 +89,7 @@ public class TeleManga extends Site {
             char alphabet = 'A';
 
             do {
-                doc = Jsoup.connect(url + alphabet)
+                doc = Jsoup.connect(url + alphabet).timeout(60000)
                         .userAgent("Mozilla")
                         .get();
 
@@ -119,7 +119,7 @@ public class TeleManga extends Site {
 
                         mangaService.save(manga);
                         try {
-                            doc = Jsoup.connect(urlMangaPage)
+                            doc = Jsoup.connect(urlMangaPage).timeout(60000)
                                     .userAgent("Mozilla")
                                     .get();
                             Elements episodes = doc.select("div[class=entry-content]").select("a");
@@ -150,7 +150,7 @@ public class TeleManga extends Site {
 
         Document doc = null;
         try {
-            doc = Jsoup.connect(episode.getUrl()).get();
+            doc = Jsoup.connect(episode.getUrl()).timeout(60000).get();
             Elements elements = doc.select("a[target=_blank]");
             for (Element e : elements) {
                 String urlVideo = e.attr("href");

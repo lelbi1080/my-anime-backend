@@ -52,7 +52,7 @@ public class MangaXd extends Site {
         String page = "";
         Document pageDoc = null;
         try {
-            doc = Jsoup.connect(url).get();
+            doc = Jsoup.connect(url).timeout(60000).get();
             Elements links = doc.select("h2[class=name text-center]");
             Element link;
 
@@ -73,7 +73,7 @@ public class MangaXd extends Site {
                 mangaAdd.setTitle(link.child(0).text());
                 mangaAdd.setTitleOriginal(link.child(0).text());
                 try {
-                    Document docc = Jsoup.connect("https://www.mangaxd.com/anime/" + titleRefactor).get();
+                    Document docc = Jsoup.connect("https://www.mangaxd.com/anime/" + titleRefactor).timeout(60000).get();
                     mangaService.save(mangaAdd);
                     episodeAdd(docc.select("a[class=episode]"), link.child(0).text(), mangaAdd, titleRefactor);
                 } catch (Exception ex) {
@@ -126,7 +126,7 @@ public class MangaXd extends Site {
     public void addVideo(Episode episode) throws IOException {
         Video video = new Video();
         video.setEpisode(episode);
-        Document doc = Jsoup.connect(episode.getUrl()).get();
+        Document doc = Jsoup.connect(episode.getUrl()).timeout(60000).get();
         Elements elements = doc.select("iframe[class=iframe]");
         String video1 = elements.get(0).attr("src");
         video.setUrl(video1);
@@ -139,7 +139,7 @@ public class MangaXd extends Site {
             urlProvider = providers.get(j).attr("href");
             Document doc2 = null;
             try {
-                doc2 = Jsoup.connect(urlProvider).get();
+                doc2 = Jsoup.connect(urlProvider).timeout(60000).get();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -158,7 +158,7 @@ public class MangaXd extends Site {
         String page = "";
         Document pageDoc = null;
         try {
-            doc = Jsoup.connect(url).get();
+            doc = Jsoup.connect(url).timeout(60000).get();
             Elements links = doc.select("li[class=page-item]");
 
             Element nbPage = links.get(1);

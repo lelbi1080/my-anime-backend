@@ -32,7 +32,7 @@ public class MyAnimelList extends Site {
 
         Document pageDoc = null;
         try {
-            doc = Jsoup.connect(url).get();
+            doc = Jsoup.connect(url).timeout(60000).get();
             Elements honriz = doc.select("div#horiznav_nav");
             Elements letters = honriz.select("li");
             Element link;
@@ -40,7 +40,7 @@ public class MyAnimelList extends Site {
             for (int j = 2; j < letters.size(); j++) {
                 link = letters.get(j);
                 href = link.child(0).attr("href");
-                doc = Jsoup.connect(href).get();
+                doc = Jsoup.connect(href).timeout(60000).get();
                 Elements imgs = doc.select("img[class=lazyload]");
                 List<String> images = new ArrayList<>();
 
@@ -83,7 +83,7 @@ public class MyAnimelList extends Site {
                 }
                 if (max == 20) {
                     int nb = max * 50 - 50;
-                    doc = Jsoup.connect(href + "&show=" + nb).get();
+                    doc = Jsoup.connect(href + "&show=" + nb).timeout(60000).get();
                     Elements divPages2 = doc.select("div[class=spaceit]");
                     Elements spanPages2 = divPages2.select("span");
                     Elements pages2 = spanPages2.select("a");
@@ -105,7 +105,7 @@ public class MyAnimelList extends Site {
                     String p = String.valueOf(Math.multiplyExact(i, m));
                     urlBasePage = urlBasePage + p;
                     try {
-                        doc = Jsoup.connect(urlBasePage).timeout(0).get();
+                        doc = Jsoup.connect(urlBasePage).timeout(60000).get();
                         imgs = doc.select("img[class=lazyload]");
                         images.clear();
                         for (Element img : imgs) {

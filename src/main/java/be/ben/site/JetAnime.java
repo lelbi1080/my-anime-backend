@@ -37,7 +37,7 @@ public class JetAnime extends Site {
         String page = "";
         Document pageDoc = null;
         try {
-            doc = Jsoup.connect(url).get();
+            doc = Jsoup.connect(url).timeout(60000).get();
             Elements accordeon = doc.select("select[class=form-control]");
             Elements links = accordeon.select("option");
             //         System.out.println(links.get(0).text());
@@ -59,7 +59,7 @@ public class JetAnime extends Site {
                 manga.setTitle(title);
                 manga.setTitleOriginal(title);
                 mangaService.save(manga);
-                doc = Jsoup.connect(url + link.attr("value")).get();
+                doc = Jsoup.connect(url + link.attr("value")).timeout(60000).get();
                 Elements div = doc.select("div[class=items]");
                 Elements episodes = div.select("a[class=list-group-item]");
                 Elements currentEpisode = div.select("a[class=list-group-item active]");

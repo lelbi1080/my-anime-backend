@@ -25,4 +25,8 @@ public interface MangaGeneraleService extends JpaRepository<MangaGenerale, Integ
 
 
     MangaGenerale findMangaGeneraleById(int id);
+
+    List<MangaGenerale> findByTitleContainingAndAnimeNotNull(String value);
+
+    MangaGenerale findByTitleAndAnimeNotNull(String title);
 }

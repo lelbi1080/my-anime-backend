@@ -2,6 +2,7 @@ package be.ben.util;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 public class Episodes implements Serializable {
@@ -16,6 +17,12 @@ public class Episodes implements Serializable {
     public Episodes() {
     }
 
+    public static final Comparator<EpisodeValue> DESCENDING_COMPARATOR = new Comparator<EpisodeValue>() {
+        // Overriding the compare method to sort the age
+        public int compare(EpisodeValue d, EpisodeValue d1) {
+            return d.getValue() - d1.getValue();
+        }
+    };
     public Episodes(List<String> epiString) {
         EpisodeValue episodeValue;
         for (int i = 0; i < epiString.size(); i++) {
@@ -38,6 +45,9 @@ public class Episodes implements Serializable {
                 others.add(episodeValue);
             }
         }
+
+
+        this.episodes.sort(DESCENDING_COMPARATOR);
     }
 
     public List<EpisodeValue> getEpisodes() {

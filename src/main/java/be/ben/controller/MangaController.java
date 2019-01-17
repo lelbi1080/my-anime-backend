@@ -67,8 +67,10 @@ public class MangaController {
 
     public static String sanitize(String s) {
         return StringUtils.stripAccents(s.toLowerCase()
-                .replaceAll("(vostfr|tv|vf|vo|Vostfr|VostFR|VOSTFR)", "")
-                .replaceAll("[-=_/ ,()\\\\]", "").replaceAll(":", ""));
+                .replaceAll("(vostfr|vf|vo|Vostfr|VostFR|VOSTFR)", "")
+                .replaceAll("[-=_/ ,()\\\\]", "")
+                .replaceAll("tv", "")
+                .replaceAll("Integrale", "").replaceAll("Integrale", "").replaceAll(":", ""));
     }
 
     public static String sanitizeAnimeList(String s) {
@@ -203,7 +205,7 @@ public class MangaController {
             if (mangaGenerale.getUrlImage() != null) {
                 try {
                     Thread.sleep(500);
-                    Document page = Jsoup.connect(mangaGenerale.getUrlPage()).get();
+                    Document page = Jsoup.connect(mangaGenerale.getUrlPage()).timeout(60000).get();
                     Elements divs = page.select("div:contains(Genres:)").get(5).select("a");
 
                     for (Element e : divs) {
@@ -218,32 +220,40 @@ public class MangaController {
         }
     }
 
-    @CrossOrigin
-    @RequestMapping("/animes/search/{genre}")
-    public Set<Anime> searchByGenre(@PathVariable Genre genre) {
+    @CrossOrigin(origins = "http://localhost:4200")
+    @PostMapping("/animes/genres")
+    public Set<MangaGenerale> searchByGenre(@RequestBody Genre genre) {
         Set<Anime> animes = new HashSet<>();
+        Set<MangaGenerale> mangas = new HashSet<>();
         List<Anime> animesList = animeService.findAll();
         for (String s : genre.getGenres()) {
             for (Anime a : animesList) {
                 for (String g : a.getMangaGenerale().getGenres()) {
                     if (g.equals(s)) {
-                        animes.add(a);
+                        mangas.add(a.getMangaGenerale());
                         break;
                     }
                 }
             }
         }
-        return animes;
+        return mangas;
     }
 
     @CrossOrigin
     @RequestMapping("/test2")
-    public Set<Anime> tets2() {
+    public Set<MangaGenerale> tets2() {
         List<String> genres = new ArrayList<>();
         genres.add("Seinen");
         // genres.add("Drama");
         Genre genre = new Genre(genres);
         return searchByGenre(genre);
+
+    }
+
+    @CrossOrigin
+    @RequestMapping("/search/{value}")
+    public List<MangaGenerale> searchValue(@PathVariable String value) {
+        return this.mangaGeneraleService.findByTitleContainingAndAnimeNotNull(value);
 
     }
     @CrossOrigin
@@ -335,6 +345,13 @@ public class MangaController {
     public String addTeleManga() throws SQLException {
         this.teleManga.addManga();
         return "start completed  ";
+
+    }
+
+    @CrossOrigin
+    @RequestMapping("/mangas/{title}")
+    public MangaGenerale findByTitle(@PathVariable String title) throws SQLException {
+        return mangaGeneraleService.findByTitleAndAnimeNotNull(title);
 
     }
 

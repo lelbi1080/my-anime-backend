@@ -41,7 +41,7 @@ public class UniversAnime extends Site {
         try {
 
 
-            doc = Jsoup.connect(url)
+            doc = Jsoup.connect(url).timeout(60000)
                     .userAgent("Mozilla")
                     .get();
 
@@ -65,7 +65,7 @@ public class UniversAnime extends Site {
                     mangaAdd.setTitleOriginal(title);
                     mangaService.save(mangaAdd);
 
-                    doc = Jsoup.connect(href).userAgent("Mozilla").get();
+                    doc = Jsoup.connect(href).userAgent("Mozilla").timeout(60000).get();
                     Elements episodes = doc.select("div.entry-content").select("a");
                     episodeAdd(episodes, title, mangaAdd);
                 }
@@ -140,7 +140,7 @@ public class UniversAnime extends Site {
     public void addVideo(Episode episode) {
         Document doc = null;
         try {
-            doc = Jsoup.connect(episode.getUrl()).get();
+            doc = Jsoup.connect(episode.getUrl()).timeout(60000).get();
             Elements elements = doc.select("a[target=iframe_a]");
             for (Element e : elements) {
                 String urlVideo = e.attr("href");
