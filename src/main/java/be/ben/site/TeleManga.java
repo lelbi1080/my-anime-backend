@@ -21,7 +21,6 @@ public class TeleManga extends Site {
 
 
     @Override
-    @Scheduled(fixedRate = 60000, initialDelay = 0)
     public void addManga() {
         try {
             createManga(urlMangas);
@@ -72,17 +71,7 @@ public class TeleManga extends Site {
                     manga.setTitleOriginal(titleManga);
 
                     mangaService.save(manga);
-                    try {
-                        doc = Jsoup.connect(urlMangaPage).timeout(60000)
-                                .userAgent("Mozilla")
-                                .get();
-                        Elements episodes = doc.select("div[class=entry-content]").select("a");
 
-
-                        episodeAdd(episodes, titleManga, manga);
-                    } catch (Exception ex) {
-                        ex.printStackTrace();
-                    }
                 }
             }
 
@@ -118,18 +107,6 @@ public class TeleManga extends Site {
                         manga.setTitleOriginal(titleManga);
 
                         mangaService.save(manga);
-                        try {
-                            doc = Jsoup.connect(urlMangaPage).timeout(60000)
-                                    .userAgent("Mozilla")
-                                    .get();
-                            Elements episodes = doc.select("div[class=entry-content]").select("a");
-
-
-                            episodeAdd(episodes, titleManga, manga);
-                        } catch (Exception ex) {
-                            ex.printStackTrace();
-                        }
-
 
                     }
                 }
@@ -164,7 +141,7 @@ public class TeleManga extends Site {
             e.printStackTrace();
         }
 
-       /*
+
         Elements providers = doc.select("a[class=provider]");
         String urlProvider;
         for (int j = 0; j < providers.size(); j++) {
@@ -180,7 +157,9 @@ public class TeleManga extends Site {
             Elements links = doc2.select("iframe[class=iframe]");
             String videos = links.get(0).attr("src");
             video2.setUrl(videos);
-            videoService.save(video2);*/
+            videoService.save(video2);
+        }
+
     }
 
     public void addVideo(String urlEpisode, Episode episode) throws IOException {
@@ -193,7 +172,7 @@ public class TeleManga extends Site {
         return null;
     }
 
-    private void episodeAdd(Elements episodes, String title, Manga mangaAdd) throws IOException {
+    public void episodeAdd(Elements episodes, String title, Manga mangaAdd) throws IOException {
         int j = 1;
         for (int i = 2; i < episodes.size(); i++) {
             EpisodeId episodeId = new EpisodeId();
@@ -221,6 +200,63 @@ public class TeleManga extends Site {
                 addVideo(episode);
             }
             j++;
+        }
+    }
+
+    @Scheduled(fixedRate = 3600000, initialDelay = 86400000)
+    public void updateEpisodes() {
+        Document doc;
+        Document page;
+        try {
+            doc = Jsoup.connect("http://www.telemanga.net/rss.php").timeout(60000).get();
+            Elements items = doc.select("item");
+            for (Element item : items) {
+                Element link = item.select("link").get(0);
+                page = Jsoup.connect(link.text()).timeout(60000).get();
+                String title = page.select("input#manga").attr("value") + " VostFr";
+                Manga m = mangaService.ifExistTitleOriginal(title, "TeleManga");
+                String href = link.text();
+
+                if (m != null) {
+
+
+                    this.addEpisode(href, title, m);
+                }
+
+            }
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    public void addEpisode(String url, String title, Manga mangaAdd) throws IOException {
+        EpisodeId episodeId = new EpisodeId();
+        if (url != "") {
+
+
+            String url2 = url;
+            int ept = url.indexOf("/ep-") + 4;
+            int end = url.indexOf("-vost");
+            String ep = "";
+            try {
+                ep = url.substring(ept, end);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            Episode e = episodeService.findByTitleMangaAndType(title, "TeleManga", ep);
+            if (e == null) {
+                episodeId.setNumEp(ep);
+                episodeId.setTitleManga(title);
+                episodeId.setType(mangaAdd.getType());
+                Episode episode = new Episode();
+                episode.setEpisode_id(episodeId);
+                episode.setManga(mangaAdd);
+                episode.setUrl(url);
+                episodeService.save(episode);
+                addVideo(episode);
+
+            }
         }
     }
 

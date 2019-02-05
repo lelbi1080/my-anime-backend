@@ -19,6 +19,7 @@ import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.*;
 
@@ -70,12 +71,14 @@ public class MangaController {
                 .replaceAll("(vostfr|vf|vo|Vostfr|VostFR|VOSTFR)", "")
                 .replaceAll("[-=_/ ,()\\\\]", "")
                 .replaceAll("tv", "")
+                .replaceAll("!", "")
                 .replaceAll("Integrale", "").replaceAll("Integrale", "").replaceAll(":", ""));
     }
 
     public static String sanitizeAnimeList(String s) {
         return StringUtils.stripAccents(s.toLowerCase()
                 .replaceAll("(vostfr|vf|vo|Vostfr|VostFR|VOSTFR)", "")
+                .replaceAll("!", "")
                 .replaceAll("[-=_/ ,()\\\\]", "").replaceAll(":", ""));
     }
 
@@ -324,6 +327,53 @@ public class MangaController {
 
     }
 
+
+    @CrossOrigin
+    @RequestMapping("/addOtakuFrEp")
+    public String addOatkuFrEp() throws SQLException {
+        Document doc = null;
+        String page = "";
+        Document pageDoc = null;
+        try {
+
+
+            doc = Jsoup.connect("http://www.otakufr.com/anime-list-all/").timeout(60000)
+                    .userAgent("Mozilla")
+                    .get();
+
+            Elements boxs = doc.select("div[class=box]");
+            Elements uls = boxs.select("ul");
+            Elements lis = uls.select("li");
+            for (Element e : lis) {
+                String href = e.select("a").attr("href");
+                String title = e.text();
+                Manga mangaFind = mangaService.ifExistTitle(title, "OtakuFr");
+                Manga mangaAdd = new Manga();
+                if (mangaFind != null) {
+                    mangaAdd = mangaFind;
+
+                    if (mangaAdd.getAnimes() != null && mangaAdd.getAnimes().size() > 0) {
+                        try {
+                            doc = Jsoup.connect(href).timeout(60000)
+                                    .userAgent("Mozilla")
+                                    .get();
+                            Elements episodes = doc.select("ul[class=lst]").select("li");
+                            otakuFr.episodeAdd(episodes, title, mangaAdd);
+                        } catch (Exception ex) {
+                            ex.printStackTrace();
+                        }
+                    }
+                }
+
+            }
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return "start completed  ";
+
+    }
     @CrossOrigin
     @RequestMapping("/addMangaXd")
     public String addMangaXd() throws SQLException {
@@ -341,12 +391,167 @@ public class MangaController {
     }
 
     @CrossOrigin
+    @RequestMapping("/addUniversAnimeEp")
+    public String addUniversAnimeEp() throws SQLException {
+        Document doc = null;
+        String page = "";
+        Document pageDoc = null;
+        try {
+
+
+            doc = Jsoup.connect("https://www.universanimez.com/liste-des-animes").timeout(60000)
+                    .userAgent("Mozilla")
+                    .get();
+
+
+            Elements uls = doc.select("ul[class=lcp_catlist]");
+            Elements lis = uls.select("li");
+            for (Element e : lis.subList(0, lis.size() / 2)) {
+                String href = e.select("a").attr("href");
+                String title = e.text();
+                if (!title.endsWith("VF") && !title.contains("vf") && !title.contains("VF")) {
+                    Manga mangaFind = mangaService.ifExistTitle(title, "UniversAnime");
+                    Manga mangaAdd = new Manga();
+                    if (mangaFind != null) {
+                        mangaAdd = mangaFind;
+                        if (mangaAdd.getAnimes() != null && mangaAdd.getAnimes().size() > 0) {
+                            try {
+                                doc = Jsoup.connect(href).userAgent("Mozilla").timeout(60000).get();
+                                Elements episodes = doc.select("div.entry-content").select("a");
+                                universAnime.episodeAdd(episodes, title, mangaAdd);
+                            } catch (Exception ex) {
+                                ex.printStackTrace();
+                            }
+                        }
+                    }
+
+
+                }
+
+            }
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+        return "start completed  ";
+
+    }
+
+    @CrossOrigin
     @RequestMapping("/addTeleManga")
     public String addTeleManga() throws SQLException {
         this.teleManga.addManga();
         return "start completed  ";
 
     }
+
+    @CrossOrigin
+    @RequestMapping("/addTeleMangaEp")
+    public String addTeleMangaEp() throws SQLException {
+        Document doc;
+        String page = "";
+        Document pageDoc = null;
+        try {
+
+            String a = "09";
+            doc = Jsoup.connect("http://www.telemanga.net/classement.php?lettre=" + a).timeout(60000)
+                    .userAgent("Mozilla")
+                    .get();
+
+            Elements divs = doc.select("div[class=entry-content clearfix]");
+            Element title;
+            Element div;
+            Element pageUrl;
+            for (int j = 0; j < divs.size(); j++) {
+                div = divs.get(j);
+                Elements titles = div.select("h2[class=entry-title]");
+                Elements pageUrls = div.select("footer[class=entry-meta]");
+                title = titles.get(0);
+                pageUrl = pageUrls.get(0);
+                if (!title.text().endsWith("VF")) {
+
+                    String titleManga = title.text();
+                    String urlMangaPage = pageUrl.select("a").attr("href");
+
+
+                    // System.out.println(link.attr("href"));
+                    Manga manga = new Manga();
+                    Manga mangaFind = mangaService.ifExistTitle(titleManga, "TeleManga");
+                    if (mangaFind != null) {
+                        manga = mangaFind;
+                        if (manga.getAnimes() != null && manga.getAnimes().size() > 0) {
+                            try {
+                                doc = Jsoup.connect(urlMangaPage).timeout(60000)
+                                        .userAgent("Mozilla")
+                                        .get();
+                                Elements episodes = doc.select("div[class=entry-content]").select("a");
+
+                                teleManga.episodeAdd(episodes, titleManga, manga);
+                            } catch (Exception ex) {
+                                ex.printStackTrace();
+                            }
+                        }
+                    }
+
+                }
+            }
+
+            char alphabet = 'A';
+
+            do {
+                doc = Jsoup.connect("http://www.telemanga.net/classement.php?lettre=" + alphabet).timeout(60000)
+                        .userAgent("Mozilla")
+                        .get();
+
+                divs = doc.select("div[class=entry-content clearfix]");
+
+                for (int j = 0; j < divs.size(); j++) {
+                    div = divs.get(j);
+                    Elements titles = div.select("h2[class=entry-title]");
+                    Elements pageUrls = div.select("footer[class=entry-meta]");
+                    title = titles.get(0);
+                    pageUrl = pageUrls.get(0);
+                    if (!title.text().endsWith("VF")) {
+
+                        String titleManga = title.text();
+                        String urlMangaPage = pageUrl.select("a").attr("href");
+
+                        // System.out.println(link.attr("href"));
+                        Manga manga = new Manga();
+                        Manga mangaFind = mangaService.ifExistTitle(titleManga, "TeleManga");
+                        if (mangaFind != null) {
+                            manga = mangaFind;
+                            if (manga.getAnimes() != null && manga.getAnimes().size() > 0) {
+                                try {
+                                    doc = Jsoup.connect(urlMangaPage).timeout(60000)
+                                            .userAgent("Mozilla")
+                                            .get();
+                                    Elements episodes = doc.select("div[class=entry-content]").select("a");
+                                    teleManga.episodeAdd(episodes, titleManga, manga);
+                                } catch (Exception ex) {
+                                    ex.printStackTrace();
+                                }
+                            }
+                        }
+
+                    }
+                }
+
+
+                alphabet++;
+            } while (alphabet <= 'Z');
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return "start completed  ";
+
+    }
+
 
     @CrossOrigin
     @RequestMapping("/mangas/{title}")
@@ -365,12 +570,37 @@ public class MangaController {
     }
 
     @CrossOrigin
+    @RequestMapping("/afterafterSql")
+    public String afterafter() throws SQLException {
+        this.dataBase.resetDatabase("afterafter.sql");
+        return "reset completed  ";
+
+    }
+
+    @CrossOrigin
     @RequestMapping("/mangaGenerales/{id}")
     public MangaGenerale getAnimeMangaGenerale(@PathVariable int id) throws SQLException {
         return this.mangaGeneraleService.findMangaGeneraleById(id);
 
     }
 
+    @CrossOrigin
+    @RequestMapping("/addMangaXdEp")
+    public String addMangaXdEp() throws SQLException {
 
+      /*  List<Manga> mangas = this.mangaService.findAllByTypeAndAnimesNotNull("MangaXd");
+        for (Manga m:mangas) {
+            try {
+                String titleRefractor=m.getTitle().substring(30, m.getTitle().length());
+                Document docc = Jsoup.connect("https://www.mangaxd.com/anime/" + titleRefractor).timeout(60000).get();
+                mangaXd.episodeAdd(docc.select("a[class=episode]"), m.getTitle(), m, titleRefractor);
+            }catch (Exception ex){
+                ex.printStackTrace();
+            }
+
+        }*/
+        mangaXd.addMangaXdEp();
+        return "start completed  ";
+    }
 
 }

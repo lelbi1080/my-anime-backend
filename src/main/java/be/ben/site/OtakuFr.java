@@ -12,6 +12,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -68,17 +69,6 @@ public class OtakuFr extends Site {
                 mangaAdd.setTitle(title);
                 mangaAdd.setTitleOriginal(title);
                 mangaService.save(mangaAdd);
-                try {
-                    doc = Jsoup.connect(href).timeout(60000)
-                            .userAgent("Mozilla")
-                            .get();
-                    Elements episodes = doc.select("ul[class=lst]").select("li");
-
-
-                    episodeAdd(episodes, title, mangaAdd);
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
             }
 
 
@@ -105,13 +95,14 @@ public class OtakuFr extends Site {
             Document doc2 = null;
             try {
                 doc2 = Jsoup.connect(urlProvider).timeout(60000).get();
-            } catch (IOException e) {
-                e.printStackTrace();
+                Elements links = doc2.select("div[class=vdo_wrp]").select("iframe");
+                String videos = links.get(0).attr("src");
+                video2.setUrl(videos);
+                videoService.save(video2);
+            } catch (Exception e) {
+                //e.printStackTrace();
             }
-            Elements links = doc2.select("div[class=vdo_wrp]").select("iframe");
-            String videos = links.get(0).attr("src");
-            video2.setUrl(videos);
-            videoService.save(video2);
+
 
         }
     }
@@ -125,7 +116,7 @@ public class OtakuFr extends Site {
         return null;
     }
 
-    private void episodeAdd(Elements episodes, String title, Manga mangaAdd) throws IOException {
+    public void episodeAdd(Elements episodes, String title, Manga mangaAdd) throws IOException {
         int j = 1;
         for (int i = episodes.size() - 1; i >= 0; i--) {
             EpisodeId episodeId = new EpisodeId();
@@ -145,8 +136,68 @@ public class OtakuFr extends Site {
             episode.setManga(mangaAdd);
             episode.setUrl(url);
             episodeService.save(episode);
-            addVideo(episode);
+            try {
+                addVideo(episode);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
             j++;
+        }
+    }
+
+    @Scheduled(fixedRate = 3600000, initialDelay = 86400000)
+    public void updateEpisodes() {
+        Document doc;
+        Document page;
+        try {
+            doc = Jsoup.connect("http://www.otakufr.com/anime-rss").timeout(60000).get();
+            Elements items = doc.select("item");
+            for (Element item : items) {
+                Element link = item.select("link").get(0);
+                page = Jsoup.connect(link.text()).timeout(60000).get();
+                Elements uis = page.select("ul.breadcrumb").select("li");
+                String title = uis.get(1).text();
+                Manga m = mangaService.ifExistTitleOriginal(title, "OtakuFr");
+                String href = link.text();
+
+                if (m != null) {
+
+
+                    this.addEpisode(href, title, m);
+                }
+
+
+            }
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    public void addEpisode(String url, String title, Manga mangaAdd) throws IOException {
+        EpisodeId episodeId = new EpisodeId();
+        String url2 = url.substring(0, url.length() - 1);
+        int x = url2.lastIndexOf("/");
+        String ep = "";
+        ep = url2.substring(++x, url.length() - 1);
+        if (ep.substring(0, 1).equals("0")) {
+            ep = ep.replace("0", "");
+        }
+        Episode e = episodeService.findByTitleMangaAndType(title, "OtakuFr", ep);
+        if (e == null) {
+            episodeId.setNumEp(ep);
+            episodeId.setTitleManga(title);
+            episodeId.setType(mangaAdd.getType());
+            Episode episode = new Episode();
+            episode.setEpisode_id(episodeId);
+            episode.setManga(mangaAdd);
+            episode.setUrl(url);
+            episodeService.save(episode);
+            try {
+                addVideo(episode);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
         }
     }
 
