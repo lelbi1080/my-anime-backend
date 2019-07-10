@@ -10,6 +10,7 @@ import be.ben.service.dao.VideoService;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.parser.Parser;
 import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -39,7 +40,7 @@ public class MangaXd extends Site {
     }
 
     @Override
-    public void addManga() {
+       public void addManga() {
         int max = Integer.valueOf(getMaxPage("https://www.mangaxd.com/anime"));
         max++;
         for (int i = 1; i < max; i++) {
@@ -110,7 +111,7 @@ public class MangaXd extends Site {
                 Manga mangaAdd = new Manga();
                 if (mangaFind != null) {
                     mangaAdd = mangaFind;
-                    if (mangaAdd.getAnimes() != null && mangaAdd.getAnimes().size() > 0) {
+                    if(mangaAdd.getAnimes()!=null &&mangaAdd.getAnimes().size()>0) {
                         try {
                             Document docc = Jsoup.connect("https://www.mangaxd.com/anime/" + titleRefactor).timeout(60000).get();
                             episodeAdd(docc.select("a[class=episode]"), mangaAdd.getTitle(), mangaAdd, titleRefactor);
@@ -156,32 +157,32 @@ public class MangaXd extends Site {
         }
     }
 
-    public void addEpisode(String href, String title, Manga mangaAdd, String ep) {
-        EpisodeId episodeId = new EpisodeId();
-        String[] all = ep.split(" ");
-        String nep = all[1];
-        if (nep.chars().allMatch(Character::isDigit)) {
-            double nepInt = Double.parseDouble(nep);
-            int nepnep = (int) nepInt;
-            nep = String.valueOf(nepnep);
-        }
-
-        Episode e = episodeService.findByTitleMangaAndType(title, "MangaXd", nep);
-        if (e == null) {
-            episodeId.setNumEp(nep);
-            episodeId.setTitleManga(title);
-            episodeId.setType(mangaAdd.getType());
-            Episode episode = new Episode();
-            episode.setEpisode_id(episodeId);
-            episode.setManga(mangaAdd);
-            episode.setUrl(href);
-            episodeService.save(episode);
-            try {
-                addVideo(episode);
-            } catch (Exception ex) {
-                ex.printStackTrace();
+    public void addEpisode(String href , String title, Manga mangaAdd,String ep ) {
+            EpisodeId episodeId = new EpisodeId();
+            String[] all = ep.split(" ");
+            String nep = all[1];
+            if (nep.chars().allMatch(Character::isDigit)) {
+                double nepInt = Double.parseDouble(nep);
+                int nepnep = (int) nepInt;
+                nep = String.valueOf(nepnep);
             }
-        }
+
+        Episode e =episodeService.findByTitleMangaAndType(title,"MangaXd",nep);
+            if(e==null) {
+                episodeId.setNumEp(nep);
+                episodeId.setTitleManga(title);
+                episodeId.setType(mangaAdd.getType());
+                Episode episode = new Episode();
+                episode.setEpisode_id(episodeId);
+                episode.setManga(mangaAdd);
+                episode.setUrl(href);
+                episodeService.save(episode);
+                try {
+                    addVideo(episode);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
 
     }
 
@@ -234,32 +235,32 @@ public class MangaXd extends Site {
     }
 
 
-    @Scheduled(fixedRate = 3600000, initialDelay = 86400000)
+
     public void updateEpisodes() {
         Document doc;
         try {
-            doc = Jsoup.connect("https://www.mangaxd.com/rss.xml").timeout(60000).get();
+             doc = Jsoup.connect("https://www.mangaxd.com/rss.xml").timeout(60000).get();
             Elements entrys = doc.select("entry");
-            for (Element entry : entrys) {
+            for(Element entry : entrys){
                 String title = entry.select("title").get(0).text();
-                String[] t = title.split("Episode");
-                title = t[0];
+                String[] t =title.split("Episode");
+                title=t[0];
                 String episode = t[1];
-                String s = title.replaceAll("&lt;", ">").
-                        replaceAll("&gt;", "<").
-                        replaceAll("&#039;", "'").
-                        replaceAll("&#034;", "''").replaceAll("&quot;", "\"");
-                Manga m = mangaService.ifExistTitleOriginal(s, "MangaXd");
-                String href = entry.select("link").attr("href");
+                String s = title.replaceAll("&lt;",">").
+                        replaceAll("&gt;","<").
+                        replaceAll("&#039;","'").
+                        replaceAll("&#034;","''").replaceAll("&quot;","\"");
+                Manga m = mangaService.ifExistTitleOriginal(s,"MangaXd");
+               String href=entry.select("link").attr("href");
 
-                if (m != null) {
+              if(m!=null){
 
 
-                    this.addEpisode(href, s, m, episode);
-                }
+                  this.addEpisode(href,s,m,episode);
+              }
             }
 
-        } catch (Exception ex) {
+        }catch (Exception ex){
             ex.printStackTrace();
         }
     }

@@ -26,8 +26,12 @@ public class Episodes implements Serializable {
     public Episodes(List<String> epiString) {
         EpisodeValue episodeValue;
         for (int i = 0; i < epiString.size(); i++) {
+			try{
             String ref = epiString.get(i);
+			String refi=ref.replaceAll("[^0-9]", "");
+			if(ref!=null&&ref!=""&&refi!=null&&refi!=""){
             episodeValue = new EpisodeValue(Integer.valueOf(ref.replaceAll("[^0-9]", "")), ref);
+			if(ref!=null&&ref!=""){
             if (ref.contains("s2")) {
                 s2.add(episodeValue);
             } else if (ref.contains("s3")) {
@@ -44,6 +48,10 @@ public class Episodes implements Serializable {
             } else {
                 others.add(episodeValue);
             }
+			}
+			}
+			}catch(Exception ex){
+			}
         }
 
 

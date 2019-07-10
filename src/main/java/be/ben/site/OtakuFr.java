@@ -55,6 +55,7 @@ public class OtakuFr extends Site {
             Elements uls = boxs.select("ul");
             Elements lis = uls.select("li");
             for (Element e : lis) {
+	try{
                 String href = e.select("a").attr("href");
                 String title = e.text();
                 Manga mangaFind = mangaService.ifExistTitle(title, "OtakuFr");
@@ -69,6 +70,9 @@ public class OtakuFr extends Site {
                 mangaAdd.setTitle(title);
                 mangaAdd.setTitleOriginal(title);
                 mangaService.save(mangaAdd);
+  	} catch (Exception exx) {
+                exx.printStackTrace();
+            }
             }
 
 
@@ -119,7 +123,9 @@ public class OtakuFr extends Site {
     public void episodeAdd(Elements episodes, String title, Manga mangaAdd) throws IOException {
         int j = 1;
         for (int i = episodes.size() - 1; i >= 0; i--) {
-            EpisodeId episodeId = new EpisodeId();
+           
+            try {
+	 EpisodeId episodeId = new EpisodeId();
             String url = episodes.get(i).select("a").attr("href");
             String url2 = url.substring(0, url.length() - 1);
             int x = url2.lastIndexOf("/");
@@ -136,55 +142,60 @@ public class OtakuFr extends Site {
             episode.setManga(mangaAdd);
             episode.setUrl(url);
             episodeService.save(episode);
-            try {
                 addVideo(episode);
-            } catch (Exception ex) {
+            }catch (Exception ex){
                 ex.printStackTrace();
             }
             j++;
         }
     }
 
-    @Scheduled(fixedRate = 3600000, initialDelay = 86400000)
+    @Scheduled(fixedRate = 3600000,initialDelay =86400000)
     public void updateEpisodes() {
         Document doc;
         Document page;
         try {
             doc = Jsoup.connect("http://www.otakufr.com/anime-rss").timeout(60000).get();
             Elements items = doc.select("item");
-            for (Element item : items) {
+            for(Element item : items){
+	try{
                 Element link = item.select("link").get(0);
-                page = Jsoup.connect(link.text()).timeout(60000).get();
-                Elements uis = page.select("ul.breadcrumb").select("li");
-                String title = uis.get(1).text();
-                Manga m = mangaService.ifExistTitleOriginal(title, "OtakuFr");
-                String href = link.text();
+                page =Jsoup.connect(link.text()).timeout(60000).get();
+                Elements uis= page.select("ul.breadcrumb").select("li");
+                String title =uis.get(1).text();
+                Manga m = mangaService.ifExistTitleOriginal(title,"OtakuFr");
+                String href=link.text();
 
-                if (m != null) {
+                if(m!=null){
 
 
-                    this.addEpisode(href, title, m);
+                    this.addEpisode(href,title,m);
                 }
+   	}catch (Exception exx){
+                exx.printStackTrace();
+            }
+
+
 
 
             }
 
-        } catch (Exception ex) {
+        }catch (Exception ex){
             ex.printStackTrace();
         }
     }
 
     public void addEpisode(String url, String title, Manga mangaAdd) throws IOException {
-        EpisodeId episodeId = new EpisodeId();
-        String url2 = url.substring(0, url.length() - 1);
-        int x = url2.lastIndexOf("/");
-        String ep = "";
-        ep = url2.substring(++x, url.length() - 1);
-        if (ep.substring(0, 1).equals("0")) {
-            ep = ep.replace("0", "");
-        }
-        Episode e = episodeService.findByTitleMangaAndType(title, "OtakuFr", ep);
-        if (e == null) {
+            EpisodeId episodeId = new EpisodeId();
+            String url2 = url.substring(0, url.length() - 1);
+            int x = url2.lastIndexOf("/");
+            String ep = "";
+            ep = url2.substring(++x, url.length() - 1);
+            if (ep.substring(0, 1).equals("0")) {
+                ep = ep.replace("0", "");
+            }
+        Episode e =episodeService.findByTitleMangaAndType(title,"OtakuFr",ep);
+        if(e==null) {
             episodeId.setNumEp(ep);
             episodeId.setTitleManga(title);
             episodeId.setType(mangaAdd.getType());

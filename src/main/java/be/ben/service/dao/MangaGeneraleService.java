@@ -14,6 +14,9 @@ public interface MangaGeneraleService extends JpaRepository<MangaGenerale, Integ
     @Query("Select distinct title from MangaGenerale where anime is not null")
     public List<String> getAllTitleMapped();
 
+
+    public MangaGenerale findById(int id);
+
     @Query("select new MangaGenerale(id,title,urlImage)   from MangaGenerale where anime_id is not null and title" +
             " like concat(:first,'%') ")
     public List<MangaGenerale> findByAnimeNotNull(String first);

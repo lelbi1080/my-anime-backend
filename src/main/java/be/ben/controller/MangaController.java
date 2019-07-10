@@ -71,14 +71,14 @@ public class MangaController {
                 .replaceAll("(vostfr|vf|vo|Vostfr|VostFR|VOSTFR)", "")
                 .replaceAll("[-=_/ ,()\\\\]", "")
                 .replaceAll("tv", "")
-                .replaceAll("!", "")
+                .replaceAll("!","")
                 .replaceAll("Integrale", "").replaceAll("Integrale", "").replaceAll(":", ""));
     }
 
     public static String sanitizeAnimeList(String s) {
         return StringUtils.stripAccents(s.toLowerCase()
                 .replaceAll("(vostfr|vf|vo|Vostfr|VostFR|VOSTFR)", "")
-                .replaceAll("!", "")
+                .replaceAll("!","")
                 .replaceAll("[-=_/ ,()\\\\]", "").replaceAll(":", ""));
     }
 
@@ -223,7 +223,7 @@ public class MangaController {
         }
     }
 
-    @CrossOrigin(origins = "http://localhost:4200")
+    @CrossOrigin
     @PostMapping("/animes/genres")
     public Set<MangaGenerale> searchByGenre(@RequestBody Genre genre) {
         Set<Anime> animes = new HashSet<>();
@@ -280,7 +280,13 @@ public class MangaController {
     @CrossOrigin
     @RequestMapping("/animesMapped/{first}")
     public List<MangaGenerale> animesMappedLetters(@PathVariable String first) {
-        return mangaGeneraleService.findByAnimeNotNull(first);
+        List<MangaGenerale> m= mangaGeneraleService.findByAnimeNotNull(first);
+
+        for (int i=0;i<m.size();i++) {
+            Optional<MangaGenerale> mm= mangaGeneraleService.findById(m.get(i).getId());
+            m.get(i).setAnimeListList(mm.get().getAnimeListList());
+        }
+        return m;
     }
 
     @CrossOrigin
@@ -345,6 +351,7 @@ public class MangaController {
             Elements uls = boxs.select("ul");
             Elements lis = uls.select("li");
             for (Element e : lis) {
+		try{
                 String href = e.select("a").attr("href");
                 String title = e.text();
                 Manga mangaFind = mangaService.ifExistTitle(title, "OtakuFr");
@@ -352,7 +359,7 @@ public class MangaController {
                 if (mangaFind != null) {
                     mangaAdd = mangaFind;
 
-                    if (mangaAdd.getAnimes() != null && mangaAdd.getAnimes().size() > 0) {
+                    if(mangaAdd.getAnimes()!=null &&mangaAdd.getAnimes().size()>0) {
                         try {
                             doc = Jsoup.connect(href).timeout(60000)
                                     .userAgent("Mozilla")
@@ -364,6 +371,9 @@ public class MangaController {
                         }
                     }
                 }
+  		 }catch (Exception ex){
+                ex.printStackTrace();
+            }
 
             }
 
@@ -389,7 +399,6 @@ public class MangaController {
         return "start completed  ";
 
     }
-
     @CrossOrigin
     @RequestMapping("/addUniversAnimeEp")
     public String addUniversAnimeEp() throws SQLException {
@@ -414,7 +423,7 @@ public class MangaController {
                     Manga mangaAdd = new Manga();
                     if (mangaFind != null) {
                         mangaAdd = mangaFind;
-                        if (mangaAdd.getAnimes() != null && mangaAdd.getAnimes().size() > 0) {
+                        if(mangaAdd.getAnimes()!=null &&mangaAdd.getAnimes().size()>0) {
                             try {
                                 doc = Jsoup.connect(href).userAgent("Mozilla").timeout(60000).get();
                                 Elements episodes = doc.select("div.entry-content").select("a");
@@ -482,7 +491,7 @@ public class MangaController {
                     Manga mangaFind = mangaService.ifExistTitle(titleManga, "TeleManga");
                     if (mangaFind != null) {
                         manga = mangaFind;
-                        if (manga.getAnimes() != null && manga.getAnimes().size() > 0) {
+                        if(manga.getAnimes()!=null &&manga.getAnimes().size()>0) {
                             try {
                                 doc = Jsoup.connect(urlMangaPage).timeout(60000)
                                         .userAgent("Mozilla")
@@ -524,7 +533,7 @@ public class MangaController {
                         Manga mangaFind = mangaService.ifExistTitle(titleManga, "TeleManga");
                         if (mangaFind != null) {
                             manga = mangaFind;
-                            if (manga.getAnimes() != null && manga.getAnimes().size() > 0) {
+                            if(manga.getAnimes()!=null &&manga.getAnimes().size()>0) {
                                 try {
                                     doc = Jsoup.connect(urlMangaPage).timeout(60000)
                                             .userAgent("Mozilla")
@@ -603,4 +612,4 @@ public class MangaController {
         return "start completed  ";
     }
 
-}
+    }

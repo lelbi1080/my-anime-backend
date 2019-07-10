@@ -12,7 +12,7 @@ public interface MangaService extends JpaRepository<Manga, Integer> {
 
     public List<Manga> findAllByType(String type);
 
-    @Query("select m from Manga m where m.title =?1  and m.type = ?2")
+    @Query("select m from Manga m where m.titleOriginal =?1  and m.type = ?2")
     public Manga ifExistTitle(String title, String type);
 
     @Query("select m from Manga m where m.titleOriginal =?1  and m.type = ?2")

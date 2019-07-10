@@ -122,7 +122,7 @@ public class UniversAnime extends Site {
                         Episode episode = new Episode();
                         episode.setEpisode_id(episodeId);
                         episode.setManga(mangaAdd);
-                        episode.setUrl(this.urlSite + url);
+                        episode.setUrl(this.urlSite+url);
                         episodeService.save(episode);
                         addVideo(episode);
                     }
@@ -136,59 +136,59 @@ public class UniversAnime extends Site {
     }
 
     public void addEpisode(String url, String title, Manga mangaAdd) throws IOException {
-        EpisodeId episodeId = new EpisodeId();
-        if (url != "") {
+            EpisodeId episodeId = new EpisodeId();
+            if (url != "") {
 
-            String ep = url;
-            try {
-                Pattern pattern;
-                if (ep.contains("s2")) {
-                    pattern = Pattern.compile("s2-[0-9]+-vost");
-                    // ep=ep.replaceAll("s2","");
-                } else if (ep.contains("s3")) {
-                    pattern = Pattern.compile("s3-[0-9]+-vost");
-                    //  ep=ep.replaceAll("s3","");
-                } else if (ep.contains("s4")) {
-                    pattern = Pattern.compile("s4-[0-9]+-vost");
-                    //ep= ep.replaceAll("s4","");
-                } else if (ep.contains("oav")) {
-                    pattern = Pattern.compile("oav-[0-9]+-vost");
-                } else if (ep.contains("s5")) {
-                    pattern = Pattern.compile("s5-[0-9]+-vost");
-                    //ep=ep.replaceAll("s5","");
-                } else {
-                    pattern = Pattern.compile("-[0-9]+-vost");
-                }
-
-
-                Matcher m = pattern.matcher(ep);
-                String test = "";
-                while (m.find()) {
-                    test = m.group(0);
-                }
-                ep = test.replaceAll("-", "");
-                ep = ep.replaceAll("vost", "");
-                //System.out.println(ep);
-                if (ep != "") {
-                    if (ep.substring(0, 1).equals("0")) {
-                        ep = ep.replace("0", "");
+                String ep = url;
+                try {
+                    Pattern pattern;
+                    if (ep.contains("s2")) {
+                        pattern = Pattern.compile("s2-[0-9]+-vost");
+                        // ep=ep.replaceAll("s2","");
+                    } else if (ep.contains("s3")) {
+                        pattern = Pattern.compile("s3-[0-9]+-vost");
+                        //  ep=ep.replaceAll("s3","");
+                    } else if (ep.contains("s4")) {
+                        pattern = Pattern.compile("s4-[0-9]+-vost");
+                        //ep= ep.replaceAll("s4","");
+                    } else if (ep.contains("oav")) {
+                        pattern = Pattern.compile("oav-[0-9]+-vost");
+                    } else if (ep.contains("s5")) {
+                        pattern = Pattern.compile("s5-[0-9]+-vost");
+                        //ep=ep.replaceAll("s5","");
+                    } else {
+                        pattern = Pattern.compile("-[0-9]+-vost");
                     }
-                    Episode e = episodeService.findByTitleMangaAndType(title, "UniversAnime", ep);
-                    // if(e==null) {
-                    episodeId.setNumEp(ep);
-                    episodeId.setTitleManga(title);
-                    episodeId.setType(mangaAdd.getType());
-                    Episode episode = new Episode();
-                    episode.setEpisode_id(episodeId);
-                    episode.setManga(mangaAdd);
-                    episode.setUrl(url);
-                    episodeService.save(episode);
-                    addVideo(episode);
-                    //}
+
+
+                    Matcher m = pattern.matcher(ep);
+                    String test = "";
+                    while (m.find()) {
+                        test = m.group(0);
+                    }
+                    ep = test.replaceAll("-", "");
+                    ep = ep.replaceAll("vost", "");
+                    //System.out.println(ep);
+                    if (ep != "") {
+                        if (ep.substring(0, 1).equals("0")) {
+                            ep = ep.replace("0", "");
+                        }
+                        Episode e =episodeService.findByTitleMangaAndType(title,"UniversAnime",ep);
+                        if(e==null) {
+                            episodeId.setNumEp(ep);
+                            episodeId.setTitleManga(title);
+                            episodeId.setType(mangaAdd.getType());
+                            Episode episode = new Episode();
+                            episode.setEpisode_id(episodeId);
+                            episode.setManga(mangaAdd);
+                            episode.setUrl(url);
+                            episodeService.save(episode);
+                            addVideo(episode);
+                        }
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
                 }
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
 
         }
     }
@@ -229,36 +229,36 @@ public class UniversAnime extends Site {
         return null;
     }
 
-    @Scheduled(fixedRate = 3600000, initialDelay = 86400000)
+    @Scheduled(fixedRate = 3600000,initialDelay = 86400000)
     public void updateEpisodes() {
-        Document doc;
-        Document page;
+       Document doc;
+       Document page;
         try {
             doc = Jsoup.connect("https://www.universanimez.com/feed").timeout(60000).get();
             Elements items = doc.select("item");
-            for (Element item : items) {
+            for(Element item : items){
                 Element link = item.select("link").get(0);
-                page = Jsoup.connect(link.text()).timeout(60000).get();
+                page =Jsoup.connect(link.text()).timeout(60000).get();
                 Elements iframes = page.select("iframe");
-                if (iframes.size() == 0) {
+                if(iframes.size()==0){
                     doc = Jsoup.connect(link.text()).userAgent("Mozilla").timeout(60000).get();
                     Elements episodes = doc.select("div.entry-content").select("a");
                     Element episode = episodes.get(0);
                     String title = item.select("title").text();
-                    Manga m = mangaService.ifExistTitleOriginal(title, "UniversAnime");
-                    String href = link.text();
+                    Manga m = mangaService.ifExistTitleOriginal(title,"UniversAnime");
+                    String href=link.text();
 
-                    if (m != null) {
+                    if(m!=null){
 
 
-                        this.addEpisode(this.urlSite + episode.attr("href"), title, m);
+                        this.addEpisode(this.urlSite+episode.attr("href"),title,m);
                     }
 
                 }
 
             }
 
-        } catch (Exception ex) {
+        }catch (Exception ex){
             ex.printStackTrace();
         }
     }
