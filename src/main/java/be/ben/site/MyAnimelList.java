@@ -26,6 +26,10 @@ public class MyAnimelList extends Site {
         createManga(urlMangas);
     }
 
+    public void addMangaIfNotExist() {
+        createMangaIfNotExiste(urlMangas);
+    }
+
     @Override
     public void createManga(String url) {
         Document doc = null;
@@ -53,14 +57,6 @@ public class MyAnimelList extends Site {
                 }
                 Elements titles = doc.select("a[class=hoverinfo_trigger fw-b fl-l]");
                 for (int i = 0; i < titles.size(); i++) {
-
-                   /* Thread.sleep(500);
-                    Document page = Jsoup.connect(titles.get(i).attr("href")).get();
-                    Elements divs= page.select("div:contains(Genres:)").get(5).select("a");
-                    List<String> genres= new ArrayList<>();
-                    for(Element e: divs){
-                        genres.add(e.text());
-                    }*/
                     String anime = titles.get(i).text();
                     MangaGenerale mangaAdd = new MangaGenerale();
 
@@ -116,19 +112,6 @@ public class MyAnimelList extends Site {
                         }
                         Elements titlespage = doc.select("a[class=hoverinfo_trigger fw-b fl-l]");
                         for (int k = 0; k < titlespage.size(); k++) {
-                        /*List<String> genres= new ArrayList<>();
-                        try{
-                            Thread.sleep(500);
-                            Document page = Jsoup.connect(titlespage.get(i).attr("href")).get();
-                            Elements divs= page.select("div:contains(Genres:)").get(5).select("a");
-
-                            for(Element e: divs){
-                                genres.add(e.text());
-                            }
-                        }catch (Exception ex){
-                            ex.printStackTrace();
-                        }*/
-
                             String anime = titlespage.get(k).text();
                             MangaGenerale mangaAdd = new MangaGenerale();
 
@@ -146,12 +129,112 @@ public class MyAnimelList extends Site {
                     } catch (Exception ex) {
                         System.out.println(ex.getMessage());
                     }
-                    //System.out.println(page.attr("href"));
-
                 }
             }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
 
+    public void createMangaIfNotExiste(String url) {
+        Document doc = null;
+
+        Document pageDoc = null;
+        try {
+            doc = Jsoup.connect(url).timeout(60000).get();
+            Elements honriz = doc.select("div#horiznav_nav");
+            Elements letters = honriz.select("li");
+            Element link;
+            String href;
+            for (int j = 2; j < letters.size(); j++) {
+                link = letters.get(j);
+                href = link.child(0).attr("href");
+                doc = Jsoup.connect(href).timeout(60000).get();
+                Elements imgs = doc.select("img[class=lazyload]");
+                List<String> images = new ArrayList<>();
+
+                for (Element img : imgs) {
+
+                    String str = img.attr("data-src");
+                    str = str.replace("r/50x70/", "");
+
+                    images.add(str);
+                }
+                Elements titles = doc.select("a[class=hoverinfo_trigger fw-b fl-l]");
+                for (int i = 0; i < titles.size(); i++) {
+                    String anime = titles.get(i).text();
+                    MangaGenerale mangaAdd = new MangaGenerale();
+
+
+                    MangaGenerale mangaFind = mangaGeneraleService.findByTitle(anime);
+
+                    if (mangaFind == null) {
+                        mangaAdd.setUrlPage(titles.get(i).attr("href"));
+                        mangaAdd.setTitle(anime);
+                        mangaAdd.setUrlImage(images.get(i));
+                        mangaGeneraleService.save(mangaAdd);
+                    }
+
+                }
+                Elements divPages = doc.select("div[class=spaceit]");
+                Elements spanPages = divPages.select("span");
+                Elements pages = spanPages.select("a");
+                int max = 0;
+                if (pages.size() > 0) {
+                    max = Integer.parseInt(pages.get(pages.size() - 1).text());
+                }
+                if (max == 20) {
+                    int nb = max * 50 - 50;
+                    doc = Jsoup.connect(href + "&show=" + nb).timeout(60000).get();
+                    Elements divPages2 = doc.select("div[class=spaceit]");
+                    Elements spanPages2 = divPages2.select("span");
+                    Elements pages2 = spanPages2.select("a");
+
+                    if (pages2.size() > 0) {
+                        int here = max;
+
+                        max = Integer.parseInt(pages2.get(pages2.size() - 1).text());
+                        if (max < here) {
+                            max = here;
+                        }
+                    }
+                }
+                //  System.out.println(max);
+                for (int i = 1; i < max; i++) {
+                    String urlBasePage = "https://myanimelist.net" + pages.get(0).attr("href");
+                    urlBasePage = urlBasePage.replace("50", "");
+                    int m = 50;
+                    String p = String.valueOf(Math.multiplyExact(i, m));
+                    urlBasePage = urlBasePage + p;
+                    try {
+                        doc = Jsoup.connect(urlBasePage).timeout(60000).get();
+                        imgs = doc.select("img[class=lazyload]");
+                        images.clear();
+                        for (Element img : imgs) {
+                            String str = img.attr("data-src");
+                            str = str.replace("r/50x70/", "");
+
+                            images.add(str);
+                        }
+                        Elements titlespage = doc.select("a[class=hoverinfo_trigger fw-b fl-l]");
+                        for (int k = 0; k < titlespage.size(); k++) {
+                            String anime = titlespage.get(k).text();
+                            MangaGenerale mangaAdd = new MangaGenerale();
+
+                            MangaGenerale mangaFind = mangaGeneraleService.findByTitle(anime);
+                            if (mangaFind == null) {
+                                mangaAdd.setTitle(anime);
+                                mangaAdd.setUrlPage(titlespage.get(k).attr("href"));
+                                mangaAdd.setUrlImage(images.get(k));
+                                mangaGeneraleService.save(mangaAdd);
+                            }
+                        }
+                    } catch (Exception ex) {
+                        System.out.println(ex.getMessage());
+                    }
+                }
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }

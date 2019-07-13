@@ -26,6 +26,9 @@ public interface MangaService extends JpaRepository<Manga, Integer> {
 
     public List<Manga> findAllByTypeAndAnimesNotNull(String type);
 
+    @Query("select m from Manga m where m.animes is empty ")
+    List<Manga> findAllNotMapped();
+
 
 
 }

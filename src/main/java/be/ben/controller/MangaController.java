@@ -121,11 +121,6 @@ public class MangaController {
                 int d = hammingDistance(sanitizeAnimeList(myGeneraleList.get(j).getTitle()), sanitize(db.get(i).getTitle()));
                 Map.Entry<Manga, Integer> pair;
                 pair = new AbstractMap.SimpleEntry(db.get(i), new Integer(d));
-
-                if (myGeneraleList.get(j).getTitle().equals("GTO") && db.get(i).getTitle().equals("GTO VostFR")) {
-                    int a = myGeneraleList.get(j).getTitle().length() / 4;
-                    System.out.println(sanitizeAnimeList(myGeneraleList.get(j).getTitle()) + " et " + sanitize(db.get(i).getTitle()) + " d = " + d + " et size " + a);
-                }
                 distances.add(d);
                 distancesPair.add(pair);
                 // System.out.println("La distance de Hamming entre " + name + " et " + db.get(i).getTitle() + " (sanitized = " + sanitize(db.get(i).getTitle() + ") " + " est de : " + d));
@@ -133,15 +128,9 @@ public class MangaController {
             Integer min = Collections.min(distances);
 
             mangasToLink = new ArrayList<>();
-            MangaGenerale m = new MangaGenerale();
             for (int k = 0; k < distancesPair.size(); k++) {
                 Anime anime = new Anime();
                 List<Manga> mangaList = new ArrayList<>();
-                if (myGeneraleList.get(j).getTitle().equals("GTO") && distancesPair.get(k).getKey().getTitle().equals("GTO VostFR")) {
-                    System.out.println(min);
-                    System.out.println(myGeneraleList.get(j).getTitle().length() / 4);
-                    System.out.println(distancesPair.get(k).getValue());
-                }
                 if (min <= myGeneraleList.get(j).getTitle().length() / 50 && distancesPair.get(k).getValue() <= myGeneraleList.get(j).getTitle().length() / 50) {
                     if (min <= distancesPair.get(k).getValue()) {
                         mangasToLink.add(distancesPair.get(k).getKey());
@@ -185,6 +174,7 @@ public class MangaController {
             return "Error " + e.getQueryString();
         }
     }
+
 
     @CrossOrigin
     @RequestMapping("/test/{name}/{name2}")
@@ -612,4 +602,93 @@ public class MangaController {
         return "start completed  ";
     }
 
+    @CrossOrigin
+    @RequestMapping("/addOtakufrComp")
+    public String addOatakuFrComp() throws SQLException {
+        otakuFr.addMangaComp();
+        return "start completed  ";
     }
+
+    @CrossOrigin
+    @RequestMapping("/addUniversAnimeComp")
+    public String addUniversAnimeComp() throws SQLException {
+        universAnime.addMangaComp();
+        return "start completed  ";
+    }
+
+
+    @CrossOrigin
+    @RequestMapping("/addAnimesNew")
+    public String addAnimesNew() {
+        List<Manga> db = mangaService.findAllNotMapped();
+        List<MangaGenerale> myGeneraleList = mangaGeneraleService.findAll();
+
+
+        //= new String[]{"Dragon Ball Z", "Dragon BaLl-- kaI", "Dragon Ronpa", "Naruto", "Ajin (TV)", "Ajin (TV) 2nd Season", "Bleach", "Ajin vostfr"};
+        ArrayList<Map.Entry<Manga, Integer>> distancesPair = new ArrayList<>();
+        ArrayList<Integer> distances = new ArrayList<>();
+        ArrayList<Manga> mangasToLink = new ArrayList<>();
+        for (int j = 0; j < myGeneraleList.size(); j++) {
+            distancesPair = new ArrayList<>();
+            distances = new ArrayList<>();
+            for (int i = 0; i < db.size(); i++) {
+                int d = hammingDistance(sanitizeAnimeList(myGeneraleList.get(j).getTitle()), sanitize(db.get(i).getTitle()));
+                Map.Entry<Manga, Integer> pair;
+                pair = new AbstractMap.SimpleEntry(db.get(i), new Integer(d));
+                distances.add(d);
+                distancesPair.add(pair);
+                // System.out.println("La distance de Hamming entre " + name + " et " + db.get(i).getTitle() + " (sanitized = " + sanitize(db.get(i).getTitle() + ") " + " est de : " + d));
+            }
+            Integer min = Collections.min(distances);
+
+            mangasToLink = new ArrayList<>();
+            for (int k = 0; k < distancesPair.size(); k++) {
+                Anime anime = new Anime();
+                List<Manga> mangaList = new ArrayList<>();
+                if (min <= myGeneraleList.get(j).getTitle().length() / 50 && distancesPair.get(k).getValue() <= myGeneraleList.get(j).getTitle().length() / 50) {
+                    if (min <= distancesPair.get(k).getValue()) {
+                        mangasToLink.add(distancesPair.get(k).getKey());
+
+                    }
+                }
+            }
+            if (mangasToLink.size() > 0) {
+                Anime anime = new Anime();
+                anime.setMangaGenerale(myGeneraleList.get(j));
+
+                for (int i = 0; i < mangasToLink.size(); i++) {
+                    mangasToLink.get(i).setManga(anime);
+                    // mangaService.save(mangasToLink.get(i));
+                }
+                anime.setMangaList(mangasToLink);
+                MangaGenerale mangaGenerale = anime.getMangaGenerale();
+                mangaGenerale.setAnime(anime);
+
+                //mangaGeneraleService.save(mangaGenerale);
+
+                animeService.save(anime);
+
+            }
+
+
+        }
+
+        return "";
+
+
+    }
+
+
+    @CrossOrigin
+    @RequestMapping("/addMangasGeneraleNot")
+    public String addMangasGeneraleIfNotExist() {
+        try {
+            myAnimelList.addMangaIfNotExist();
+            return "Ok";
+        } catch (QueryException e) {
+            return "Error " + e.getQueryString();
+        }
+    }
+
+
+}

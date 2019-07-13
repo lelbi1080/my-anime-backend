@@ -39,6 +39,62 @@ public class OtakuFr extends Site {
         }
     }
 
+    public void addMangaComp() {
+        try {
+            createMangaComp(urlMangas);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void createMangaComp(String url) throws IOException{
+        Document doc = null;
+        String page = "";
+        Document pageDoc = null;
+        try {
+
+
+            doc = Jsoup.connect(url).timeout(60000)
+                    .userAgent("Mozilla")
+                    .get();
+
+            Elements boxs = doc.select("div[class=box]");
+            Elements uls = boxs.select("ul");
+            Elements lis = uls.select("li");
+            for (Element e : lis) {
+                try{
+                    String href = e.select("a").attr("href");
+                    String title = e.text();
+                    Manga mangaFind = mangaService.ifExistTitle(title, "OtakuFr");
+                    Manga mangaAdd = new Manga();
+                    if (mangaFind == null) {
+                        mangaAdd.setType("OtakuFr");
+                        mangaAdd.setTitle(title);
+                        mangaAdd.setTitleOriginal(title);
+                        mangaService.save(mangaAdd);
+                        Document docEp=null;
+                        try {
+                            docEp = Jsoup.connect(href).timeout(60000)
+                                    .userAgent("Mozilla")
+                                    .get();
+                            Elements episodes = docEp.select("ul[class=lst]").select("li");
+                            this.episodeAdd(episodes, title, mangaAdd);
+                        } catch (Exception ex) {
+                            ex.printStackTrace();
+                        }
+                    }
+
+                } catch (Exception exx) {
+                    exx.printStackTrace();
+                }
+            }
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     @Override
     public void createManga(String url) throws IOException {
         Document doc = null;

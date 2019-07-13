@@ -264,4 +264,56 @@ public class UniversAnime extends Site {
     }
 
 
+    public void addMangaComp()  {
+        try {
+            createMangaComp(urlMangas);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void createMangaComp(String url) throws IOException {
+        Document doc = null;
+        String page = "";
+        Document pageDoc = null;
+        try {
+
+
+            doc = Jsoup.connect(url).timeout(60000)
+                    .userAgent("Mozilla")
+                    .get();
+
+
+            Elements uls = doc.select("ul[class=lcp_catlist]");
+            Elements lis = uls.select("li");
+            for (Element e : lis.subList(0, lis.size() / 2)) {
+                String href = e.select("a").attr("href");
+                String title = e.text();
+                if (!title.endsWith("VF") && !title.contains("vf") && !title.contains("VF")) {
+                    Manga mangaFind = mangaService.ifExistTitle(title, "UniversAnime");
+                    Manga mangaAdd = new Manga();
+                    if (mangaFind == null) {
+                        mangaAdd.setType("UniversAnime");
+                        mangaAdd.setTitle(title);
+                        mangaAdd.setTitleOriginal(title);
+                        mangaService.save(mangaAdd);
+                        Document docEp=null;
+                        try {
+                            docEp = Jsoup.connect(href).userAgent("Mozilla").timeout(60000).get();
+                            Elements episodes = docEp.select("div.entry-content").select("a");
+                            this.episodeAdd(episodes, title, mangaAdd);
+                        } catch (Exception ex) {
+                            ex.printStackTrace();
+                        }
+                    }
+
+
+                }
+            }
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }
