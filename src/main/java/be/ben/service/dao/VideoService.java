@@ -11,5 +11,7 @@ public interface VideoService extends JpaRepository<Video, Integer> {
 
 
     public List<Video> getVideoByEpisode(Episode episode);
+
+    Video findVideoByUrlAndEpisode(String url,Episode episode);
 }
 
