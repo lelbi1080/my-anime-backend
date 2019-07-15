@@ -7,6 +7,7 @@ import be.ben.repository.Video;
 import be.ben.service.dao.EpisodeService;
 import be.ben.service.dao.MangaService;
 import be.ben.service.dao.VideoService;
+import okio.Options;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 @Component
 public class FullAnime extends Site {
@@ -58,8 +60,12 @@ public class FullAnime extends Site {
             list.forEach((e)->{
                 try{
                     String href = e.select("a").attr("href");
+                    System.out.println(href);
+                    if(!href.contains("www")){
+                        href=href.replace("http://","http://www.");
+                    }
+
                     String title = e.text();
-                    System.out.println();
                     Manga mangaFind = mangaService.ifExistTitle(title, "FullAnime");
                     Manga mangaAdd = new Manga();
                     if (mangaFind == null) {
@@ -72,8 +78,32 @@ public class FullAnime extends Site {
                             docEp = Jsoup.connect(href).timeout(60000)
                                     .userAgent("Mozilla")
                                     .get();
-                            Elements episodes = docEp.select("div[class=td-block-row]").select("div[class=td-module-thumb]");
-                            System.out.println(episodes.get(0).html());
+                            Elements episodes = docEp.select("div[class=td-block-span6]");
+                            if(title.equals("Dr.Stone")){
+                                System.out.println();
+                            }
+                            Optional<Element> elementOptional =episodes.stream().filter((a)->{
+                                String hrefEp = a.select("a").attr("href");
+                                int start = hrefEp.indexOf("ode-")+4;
+                                int end = hrefEp.indexOf("-vostfr");
+                                return hrefEp.substring(start,end).matches("-?\\d+(\\.\\d+)?");
+
+                            }).findFirst();
+
+                            System.out.println(title);
+
+                            if(elementOptional.isPresent()){
+                                String numEp = elementOptional.get().select("a").attr("href");
+                                int start = numEp.indexOf("ode-")+4;
+                                int end = numEp.indexOf("-vost");
+
+                                System.out.println( numEp.substring(start,end));
+                            }else{
+                                System.out.println("non ok");
+                            }
+
+
+
                            // Elements episodes = docEp.select("ul[class=lst]").select("li");
                             //this.episodeAdd(episodes, title, mangaAdd);
                         } catch (Exception ex) {
