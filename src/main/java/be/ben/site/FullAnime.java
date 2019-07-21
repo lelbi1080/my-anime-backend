@@ -17,8 +17,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Component
 public class FullAnime extends Site {
@@ -59,6 +58,7 @@ public class FullAnime extends Site {
             List<Element> list=lis.subList(6,(lis.size()/2)-1);
             list.forEach((e)->{
                 try{
+                    HashMap<Integer,String> findEpisode= new HashMap<>();
                     String href = e.select("a").attr("href");
                     System.out.println(href);
                     if(!href.contains("www")){
@@ -86,22 +86,43 @@ public class FullAnime extends Site {
                                 String hrefEp = a.select("a").attr("href");
                                 int start = hrefEp.indexOf("ode-")+4;
                                 int end = hrefEp.indexOf("-vostfr");
-                                return hrefEp.substring(start,end).matches("-?\\d+(\\.\\d+)?");
+                                return hrefEp.substring(start,end).chars().allMatch( Character::isDigit );
 
                             }).findFirst();
 
                             System.out.println(title);
 
                             if(elementOptional.isPresent()){
+
                                 String numEp = elementOptional.get().select("a").attr("href");
                                 int start = numEp.indexOf("ode-")+4;
                                 int end = numEp.indexOf("-vost");
+                                String numEpM=numEp.substring(start,end);
+                                int nbEp=Integer.parseInt(numEpM);
+                                for(int i=nbEp;i>=1;i--){
+                                    String numEps="";
+                                    if(i<10){
+                                        numEps="0"+String.valueOf(i);
+                                    }else{
+                                        numEps=String.valueOf(i);
+                                    }
+                                    String value = numEp.subSequence(0,start)+numEps;
+                                    value=value+numEp.subSequence(end,numEp.length());
+                                    findEpisode.put(Integer.valueOf(numEps),value);
 
-                                System.out.println( numEp.substring(start,end));
+
+                                }
                             }else{
                                 System.out.println("non ok");
                             }
 
+                            if(findEpisode.size()>0){
+                                //ok
+                                System.out.println(title+" : "+findEpisode.size());
+                                episodeAdd(findEpisode,title,mangaAdd);
+                            }else {
+                                System.out.println(title+" : pas trouver ");
+                            }
 
 
                            // Elements episodes = docEp.select("ul[class=lst]").select("li");
@@ -220,29 +241,20 @@ public class FullAnime extends Site {
         Document doc = null;
         try {
             doc = Jsoup.connect(episode.getUrl()).timeout(60000).get();
-        } catch (IOException e) {
+            Elements  urlVideos = doc.select("div[class=td-post-content]").select("iframe");
+
+            for (int j = 0; j < urlVideos.size(); j++) {
+                Video video2 = new Video();
+                video2.setEpisode(episode);
+                String videos = urlVideos.get(j).attr("src");
+                video2.setUrl(videos);
+                System.out.println();
+                //  videoService.save(video2);
+            }
+        } catch (Exception e) {
             e.printStackTrace();
         }
-        Elements providers = doc.select("div[class=nav_ver]").select("a");
 
-        String urlProvider;
-        for (int j = 0; j < providers.size(); j++) {
-            Video video2 = new Video();
-            video2.setEpisode(episode);
-            urlProvider = providers.get(j).attr("href");
-            Document doc2 = null;
-            try {
-                doc2 = Jsoup.connect(urlProvider).timeout(60000).get();
-                Elements links = doc2.select("div[class=vdo_wrp]").select("iframe");
-                String videos = links.get(0).attr("src");
-                video2.setUrl(videos);
-                videoService.save(video2);
-            } catch (Exception e) {
-                //e.printStackTrace();
-            }
-
-
-        }
     }
 
     public void addVideo(String urlEpisode, Episode episode) throws IOException {
@@ -254,35 +266,29 @@ public class FullAnime extends Site {
         return null;
     }
 
-    public void episodeAdd(Elements episodes, String title, Manga mangaAdd) throws IOException {
-        int j = 1;
-        for (int i = episodes.size() - 1; i >= 0; i--) {
-           
+    public void episodeAdd(HashMap<Integer,String> episodes, String title, Manga mangaAdd) throws IOException {
+        episodes.forEach((a,b)->{
             try {
-	 EpisodeId episodeId = new EpisodeId();
-            String url = episodes.get(i).select("a").attr("href");
-            String url2 = url.substring(0, url.length() - 1);
-            int x = url2.lastIndexOf("/");
-            String ep = "";
-            ep = url2.substring(++x, url.length() - 1);
-            if (ep.substring(0, 1).equals("0")) {
-                ep = ep.replace("0", "");
-            }
-            episodeId.setNumEp(ep);
-            episodeId.setTitleManga(title);
-            episodeId.setType(mangaAdd.getType());
-            Episode episode = new Episode();
-            episode.setEpisode_id(episodeId);
-            episode.setManga(mangaAdd);
-            episode.setUrl(url);
-            episodeService.save(episode);
+                EpisodeId episodeId = new EpisodeId();
+                String url = b;
+                episodeId.setNumEp(a.toString());
+                episodeId.setTitleManga(title);
+                episodeId.setType(mangaAdd.getType());
+                Episode episode = new Episode();
+                episode.setEpisode_id(episodeId);
+                episode.setManga(mangaAdd);
+                episode.setUrl(url);
+               // episodeService.save(episode);
                 addVideo(episode);
             }catch (Exception ex){
                 ex.printStackTrace();
             }
-            j++;
-        }
+        });
+           
+
+
     }
+
 
 
     public void updateEpisodes() {
