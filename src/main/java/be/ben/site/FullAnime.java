@@ -11,6 +11,8 @@ import okio.Options;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Node;
+import org.jsoup.parser.Parser;
 import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -33,7 +35,6 @@ public class FullAnime extends Site {
     private VideoService videoService;
 
     @Override
-    @Scheduled(fixedRate = 3600000,initialDelay =3000)
     public void addManga() {
         try {
             createMangaComp(urlMangas);
@@ -72,16 +73,13 @@ public class FullAnime extends Site {
                         mangaAdd.setType("FullAnime");
                         mangaAdd.setTitle(title);
                         mangaAdd.setTitleOriginal(title);
-                      //  mangaService.save(mangaAdd);
+                        mangaService.save(mangaAdd);
                         Document docEp=null;
-                        try {
+                       try {
                             docEp = Jsoup.connect(href).timeout(60000)
                                     .userAgent("Mozilla")
                                     .get();
                             Elements episodes = docEp.select("div[class=td-block-span6]");
-                            if(title.equals("Dr.Stone")){
-                                System.out.println();
-                            }
                             Optional<Element> elementOptional =episodes.stream().filter((a)->{
                                 String hrefEp = a.select("a").attr("href");
                                 int start = hrefEp.indexOf("ode-")+4;
@@ -89,8 +87,6 @@ public class FullAnime extends Site {
                                 return hrefEp.substring(start,end).chars().allMatch( Character::isDigit );
 
                             }).findFirst();
-
-                            System.out.println(title);
 
                             if(elementOptional.isPresent()){
 
@@ -109,24 +105,13 @@ public class FullAnime extends Site {
                                     String value = numEp.subSequence(0,start)+numEps;
                                     value=value+numEp.subSequence(end,numEp.length());
                                     findEpisode.put(Integer.valueOf(numEps),value);
-
-
                                 }
-                            }else{
-                                System.out.println("non ok");
                             }
 
                             if(findEpisode.size()>0){
-                                //ok
-                                System.out.println(title+" : "+findEpisode.size());
                                 episodeAdd(findEpisode,title,mangaAdd);
                             }else {
-                                System.out.println(title+" : pas trouver ");
                             }
-
-
-                           // Elements episodes = docEp.select("ul[class=lst]").select("li");
-                            //this.episodeAdd(episodes, title, mangaAdd);
                         } catch (Exception ex) {
                             ex.printStackTrace();
                         }
@@ -142,98 +127,10 @@ public class FullAnime extends Site {
         } catch (IOException e) {
             e.printStackTrace();
         }
-       /* Document doc = null;
-        String page = "";
-        Document pageDoc = null;
-        try {
-
-
-            doc = Jsoup.connect(url).timeout(60000)
-                    .userAgent("Mozilla")
-                    .get();
-
-            Elements boxs = doc.select("div[class=box]");
-            Elements uls = boxs.select("ul");
-            Elements lis = uls.select("li");
-            for (Element e : lis) {
-                try{
-                    String href = e.select("a").attr("href");
-                    String title = e.text();
-                    Manga mangaFind = mangaService.ifExistTitle(title, "OtakuFr");
-                    Manga mangaAdd = new Manga();
-                    if (mangaFind == null) {
-                        mangaAdd.setType("OtakuFr");
-                        mangaAdd.setTitle(title);
-                        mangaAdd.setTitleOriginal(title);
-                        mangaService.save(mangaAdd);
-                        Document docEp=null;
-                        try {
-                            docEp = Jsoup.connect(href).timeout(60000)
-                                    .userAgent("Mozilla")
-                                    .get();
-                            Elements episodes = docEp.select("ul[class=lst]").select("li");
-                            this.episodeAdd(episodes, title, mangaAdd);
-                        } catch (Exception ex) {
-                            ex.printStackTrace();
-                        }
-                    }
-
-                } catch (Exception exx) {
-                    exx.printStackTrace();
-                }
-            }
-
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }*/
     }
 
     @Override
     public void createManga(String url) throws IOException {
-      /*  Document doc = null;
-        String page = "";
-        Document pageDoc = null;
-        try {
-
-
-            doc = Jsoup.connect(url).timeout(60000)
-                    .userAgent("Mozilla")
-                    .get();
-            Elements lis = doc.select("li");
-            List<Element> list=lis.subList(6,(lis.size()/2)-1);
-            list.forEach((e)->{
-                System.out.println(e.html());
-            });
-
-          /*  Elements boxs = doc.select("div[class=box]");
-            Elements uls = boxs.select("ul");
-            Elements lis = uls.select("li");
-            for (Element e : lis) {
-	try{
-                String href = e.select("a").attr("href");
-                String title = e.text();
-                Manga mangaFind = mangaService.ifExistTitle(title, "OtakuFr");
-                Manga mangaAdd = new Manga();
-                if (mangaFind != null) {
-                    mangaAdd = mangaFind;
-                }
-
-                // mangaAdd.setTitle(link.child(0).text());
-                mangaAdd.setType("OtakuFr");
-                //System.out.println(link.child(0).text());
-                mangaAdd.setTitle(title);
-                mangaAdd.setTitleOriginal(title);
-                mangaService.save(mangaAdd);
-  	} catch (Exception exx) {
-                exx.printStackTrace();
-            }
-            }
-
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }*/
     }
 
     @Override
@@ -248,8 +145,10 @@ public class FullAnime extends Site {
                 video2.setEpisode(episode);
                 String videos = urlVideos.get(j).attr("src");
                 video2.setUrl(videos);
-                System.out.println();
-                //  videoService.save(video2);
+                if(videoService.findVideoByUrlAndEpisode(videos,episode)==null){
+                    video2.setUrl(videos);
+                    videoService.save(video2);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -278,7 +177,7 @@ public class FullAnime extends Site {
                 episode.setEpisode_id(episodeId);
                 episode.setManga(mangaAdd);
                 episode.setUrl(url);
-               // episodeService.save(episode);
+                episodeService.save(episode);
                 addVideo(episode);
             }catch (Exception ex){
                 ex.printStackTrace();
@@ -291,25 +190,29 @@ public class FullAnime extends Site {
 
 
 
+    @Scheduled(fixedRate = 3600000,initialDelay =86400000)
     public void updateEpisodes() {
         Document doc;
         Document page;
         try {
-            doc = Jsoup.connect("http://www.otakufr.com/anime-rss").timeout(60000).get();
-            Elements items = doc.select("item");
+            doc = Jsoup.connect("https://www.fullanimevf.co/feed/?rss=2").timeout(60000).get();
+            String html = doc.html();
+             doc = Jsoup.parse(html, "", Parser.xmlParser());
+
+            Elements items = doc.getElementsByTag("item");
             for(Element item : items){
 	try{
-                Element link = item.select("link").get(0);
-                page =Jsoup.connect(link.text()).timeout(60000).get();
-                Elements uis= page.select("ul.breadcrumb").select("li");
-                String title =uis.get(1).text();
-                Manga m = mangaService.ifExistTitleOriginal(title,"OtakuFr");
-                String href=link.text();
 
+
+                String title =item.select("title").text();
+                title=title.split(" Episode")[0];
+                String href = item.select("link").get(0).child(0).text();
+
+
+                Manga m = mangaService.ifExistTitleOriginal(title,"FullAnime");
                 if(m!=null){
-
-
                     this.addEpisode(href,title,m);
+
                 }
    	}catch (Exception exx){
                 exx.printStackTrace();
@@ -326,23 +229,20 @@ public class FullAnime extends Site {
     }
 
     public void addEpisode(String url, String title, Manga mangaAdd) throws IOException {
-            EpisodeId episodeId = new EpisodeId();
-            String url2 = url.substring(0, url.length() - 1);
-            int x = url2.lastIndexOf("/");
-            String ep = "";
-            ep = url2.substring(++x, url.length() - 1);
-            if (ep.substring(0, 1).equals("0")) {
-                ep = ep.replace("0", "");
-            }
-        Episode e =episodeService.findByTitleMangaAndType(title,"OtakuFr",ep);
+        EpisodeId episodeId = new EpisodeId();
+        String numEp =url;
+        int start = numEp.indexOf("ode-")+4;
+        int end = numEp.indexOf("-vost");
+        String numEpM=numEp.substring(start,end);
+        episodeId.setNumEp(Integer.valueOf(numEpM).toString());
+        episodeId.setTitleManga(title);
+        episodeId.setType(mangaAdd.getType());
+        Episode episode = new Episode();
+        episode.setEpisode_id(episodeId);
+        episode.setManga(mangaAdd);
+        episode.setUrl(url);
+        Episode e = episodeService.findByTitleMangaAndType(title,"FullAnime",numEpM);
         if(e==null) {
-            episodeId.setNumEp(ep);
-            episodeId.setTitleManga(title);
-            episodeId.setType(mangaAdd.getType());
-            Episode episode = new Episode();
-            episode.setEpisode_id(episodeId);
-            episode.setManga(mangaAdd);
-            episode.setUrl(url);
             episodeService.save(episode);
             try {
                 addVideo(episode);
