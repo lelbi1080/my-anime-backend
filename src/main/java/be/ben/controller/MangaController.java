@@ -656,20 +656,35 @@ public class MangaController {
                 }
             }
             if (mangasToLink.size() > 0) {
-                Anime anime = new Anime();
-                anime.setMangaGenerale(myGeneraleList.get(j));
+                Anime anime;
+                Anime mangaFind = animeService.findAnimeByMangaGenerale(myGeneraleList.get(j));
+                if(mangaFind==null){
+                    anime=new Anime();
+                    anime.setMangaGenerale(myGeneraleList.get(j));
+                    for (int i = 0; i < mangasToLink.size(); i++) {
+                        mangasToLink.get(i).setManga(anime);
+                        // mangaService.save(mangasToLink.get(i));
+                    }
+                    anime.setMangaList(mangasToLink);
+                    MangaGenerale mangaGenerale = anime.getMangaGenerale();
+                    mangaGenerale.setAnime(anime);
 
-                for (int i = 0; i < mangasToLink.size(); i++) {
-                    mangasToLink.get(i).setManga(anime);
-                    // mangaService.save(mangasToLink.get(i));
+                    //mangaGeneraleService.save(mangaGenerale);
+
+                    animeService.save(anime);
+                }else {
+                    anime=mangaFind;
+                    for (int i = 0; i < mangasToLink.size(); i++) {
+                        mangasToLink.get(i).setManga(anime);
+                        // mangaService.save(mangasToLink.get(i));
+                    }
+                    anime.getMangaList().addAll(mangasToLink);
+
+                    animeService.save(anime);
+
                 }
-                anime.setMangaList(mangasToLink);
-                MangaGenerale mangaGenerale = anime.getMangaGenerale();
-                mangaGenerale.setAnime(anime);
 
-                //mangaGeneraleService.save(mangaGenerale);
 
-                animeService.save(anime);
 
             }
 

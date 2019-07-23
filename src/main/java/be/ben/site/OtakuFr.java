@@ -208,7 +208,7 @@ public class OtakuFr extends Site {
         }
     }
 
-    @Scheduled(fixedRate = 3600000,initialDelay =86400000)
+    @Scheduled(fixedRate = 3600000,initialDelay =3600000)
     public void updateEpisodes() {
         Document doc;
         Document page;

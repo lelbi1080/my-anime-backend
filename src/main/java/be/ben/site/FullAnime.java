@@ -74,7 +74,7 @@ public class FullAnime extends Site {
                         mangaAdd.setTitle(title);
                         mangaAdd.setTitleOriginal(title);
                         mangaService.save(mangaAdd);
-                        Document docEp=null;
+                      /*  Document docEp=null;
                        try {
                             docEp = Jsoup.connect(href).timeout(60000)
                                     .userAgent("Mozilla")
@@ -114,7 +114,7 @@ public class FullAnime extends Site {
                             }
                         } catch (Exception ex) {
                             ex.printStackTrace();
-                        }
+                        }*/
                     }
 
                 } catch (Exception exx) {
@@ -190,7 +190,7 @@ public class FullAnime extends Site {
 
 
 
-    @Scheduled(fixedRate = 3600000,initialDelay =86400000)
+    @Scheduled(fixedRate = 3600000,initialDelay =3600000)
     public void updateEpisodes() {
         Document doc;
         Document page;

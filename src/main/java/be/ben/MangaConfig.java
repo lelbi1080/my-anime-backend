@@ -23,8 +23,8 @@ public class MangaConfig {
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
         dataSource.setDriverClassName("com.mysql.jdbc.Driver");
         dataSource.setUrl("jdbc:mysql://localhost:3306/manga");
-        dataSource.setUsername("dbu");
-        dataSource.setPassword("test");
+        dataSource.setUsername("root");
+        dataSource.setPassword("");
         return dataSource;
     }
 
