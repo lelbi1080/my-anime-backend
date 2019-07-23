@@ -53,6 +53,9 @@ public class MangaController {
     @Autowired
     private UniversAnime universAnime;
 
+    @Autowired
+    private FullAnime fullAnime;
+
     public static int hammingDistance(String s1, String s2) {
         //   System.out.println("Je compare " + s1 + " avec " + s2);
         int cpt = Math.abs(s1.length() - s2.length());
@@ -688,6 +691,13 @@ public class MangaController {
         } catch (QueryException e) {
             return "Error " + e.getQueryString();
         }
+    }
+
+    @CrossOrigin
+    @RequestMapping("/addFullAnimeComp")
+    public String addFullAnimeComp() throws SQLException {
+        fullAnime.addManga();
+        return "start completed  ";
     }
 
 
