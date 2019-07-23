@@ -715,5 +715,13 @@ public class MangaController {
         return "start completed  ";
     }
 
+    @CrossOrigin
+    @RequestMapping("/fullAnimeSql")
+    public String fullAnimeSql() throws SQLException {
+        this.dataBase.resetDatabase("fullAnime.sql");
+        return "reset completed  ";
+
+    }
+
 
 }
