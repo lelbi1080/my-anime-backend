@@ -20,6 +20,8 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 @Component
 public class FullAnime extends Site {
@@ -74,7 +76,7 @@ public class FullAnime extends Site {
                         mangaAdd.setTitle(title);
                         mangaAdd.setTitleOriginal(title);
                         mangaService.save(mangaAdd);
-                      /*  Document docEp=null;
+                        Document docEp=null;
                        try {
                             docEp = Jsoup.connect(href).timeout(60000)
                                     .userAgent("Mozilla")
@@ -88,6 +90,15 @@ public class FullAnime extends Site {
 
                             }).findFirst();
 
+                           List<Element> eps =episodes.stream().filter((a)->{
+                               String hrefEp = a.select("a").attr("href");
+                               int start = hrefEp.indexOf("ode-")+4;
+                               int end = hrefEp.indexOf("-vostfr");
+                               return hrefEp.substring(start,end).chars().allMatch( Character::isDigit );
+                           }).collect(Collectors.toList());
+
+
+
                             if(elementOptional.isPresent()){
 
                                 String numEp = elementOptional.get().select("a").attr("href");
@@ -95,16 +106,20 @@ public class FullAnime extends Site {
                                 int end = numEp.indexOf("-vost");
                                 String numEpM=numEp.substring(start,end);
                                 int nbEp=Integer.parseInt(numEpM);
-                                for(int i=nbEp;i>=1;i--){
-                                    String numEps="";
-                                    if(i<10){
-                                        numEps="0"+String.valueOf(i);
-                                    }else{
-                                        numEps=String.valueOf(i);
-                                    }
-                                    String value = numEp.subSequence(0,start)+numEps;
-                                    value=value+numEp.subSequence(end,numEp.length());
-                                    findEpisode.put(Integer.valueOf(numEps),value);
+                                String value = numEp.subSequence(0,start)+String.valueOf(nbEp);
+                                value=value+numEp.subSequence(end,numEp.length());
+                                findEpisode.put(Integer.valueOf(nbEp),value);
+                                eps=eps.subList(1,eps.size());
+
+                                for(Element element : eps){
+                                    numEp=element.select("a").attr("href");
+
+                                    start = numEp.indexOf("ode-")+4;
+                                   end = numEp.indexOf("-vost");
+                                    numEpM=numEp.substring(start,end);
+                                    String hrefEp = numEp.subSequence(0,start)+numEpM;
+                                    hrefEp=hrefEp+numEp.subSequence(end,numEp.length());
+                                    findEpisode.put(Integer.valueOf(numEp),value);
                                 }
                             }
 
@@ -114,7 +129,7 @@ public class FullAnime extends Site {
                             }
                         } catch (Exception ex) {
                             ex.printStackTrace();
-                        }*/
+                        }
                     }
 
                 } catch (Exception exx) {
