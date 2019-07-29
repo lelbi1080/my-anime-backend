@@ -75,7 +75,7 @@ public class FullAnime extends Site {
                         mangaAdd.setType("FullAnime");
                         mangaAdd.setTitle(title);
                         mangaAdd.setTitleOriginal(title);
-                        mangaService.save(mangaAdd);
+                        //mangaService.save(mangaAdd);
                         Document docEp=null;
                        try {
                             docEp = Jsoup.connect(href).timeout(60000)
@@ -90,7 +90,7 @@ public class FullAnime extends Site {
 
                             }).findFirst();
 
-                           List<Element> eps =episodes.stream().filter((a)->{
+                          /* List<Element> eps =episodes.stream().filter((a)->{
                                String hrefEp = a.select("a").attr("href");
                                int start = hrefEp.indexOf("ode-")+4;
                                int end = hrefEp.indexOf("-vostfr");
@@ -121,10 +121,47 @@ public class FullAnime extends Site {
                                     hrefEp=hrefEp+numEp.subSequence(end,numEp.length());
                                     findEpisode.put(Integer.valueOf(numEp),value);
                                 }
-                            }
+                            }*/
 
-                            if(findEpisode.size()>0){
-                                episodeAdd(findEpisode,title,mangaAdd);
+                           if(elementOptional.isPresent()){
+                               List<Element> eps =episodes.stream().filter((a)->{
+                                   String hrefEp = a.select("a").attr("href");
+                                   int start = hrefEp.indexOf("ode-")+4;
+                                   int end = hrefEp.indexOf("-vost");
+                                   return hrefEp.substring(start,end).chars().allMatch( Character::isDigit );
+                               }).collect(Collectors.toList());
+                               String hrefEp="";
+                               if(eps.size()>1){
+                                   hrefEp=eps.get(1).select("a").attr("href");
+                               }else {
+                                   hrefEp=elementOptional.get().select("a").attr("href");
+                               }
+
+                               String numEp = elementOptional.get().select("a").attr("href");
+                               int start = numEp.indexOf("ode-")+4;
+                               int end = numEp.indexOf("-vost");
+                               String numEpM=numEp.substring(start,end);
+                               int nbEp=Integer.parseInt(numEpM);
+                               for(int i=nbEp;i>=1;i--){
+                                   String numEps="";
+                                   if(i<10){
+                                       numEps="0"+String.valueOf(i);
+                                   }else{
+                                       numEps=String.valueOf(i);
+                                   }
+                                   String value = hrefEp.subSequence(0,start)+numEps;
+                                   value=value+hrefEp.subSequence(end,numEp.length());
+                                   findEpisode.put(Integer.valueOf(numEps),value);
+                               }
+                           }
+
+
+                           if(findEpisode.size()>0){
+
+                               if(title.equals("Attack on Titan Saison 1")){
+                                   System.out.println();
+                               }
+                             //   episodeAdd(findEpisode,title,mangaAdd);
                             }else {
                             }
                         } catch (Exception ex) {
