@@ -10,5 +10,6 @@ import java.util.List;
 
 public interface UserService extends JpaRepository<User, Integer> {
 
+    @Query(value = "select * from User  WHERE BINARY `userName` = :userName",nativeQuery = true)
     public User findByuserName(String userName);
 }

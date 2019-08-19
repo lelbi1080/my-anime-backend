@@ -122,7 +122,11 @@ public class UniversAnime extends Site {
                         Episode episode = new Episode();
                         episode.setEpisode_id(episodeId);
                         episode.setManga(mangaAdd);
-                        episode.setUrl(this.urlSite+url);
+                         if(url.contains("https://www.")){
+                            episode.setUrl(url);
+                        }else {
+                            episode.setUrl(this.urlSite+url);
+                        }
                         episodeService.save(episode);
                         addVideo(episode);
                     }
@@ -304,6 +308,18 @@ public class UniversAnime extends Site {
                             this.episodeAdd(episodes, title, mangaAdd);
                         } catch (Exception ex) {
                             ex.printStackTrace();
+                        }
+                    }else {
+                        mangaAdd=mangaFind;
+                        if(mangaAdd.getEpisodes().size()==0){
+                            Document docEp=null;
+                            try {
+                                docEp = Jsoup.connect(href).userAgent("Mozilla").timeout(60000).get();
+                                Elements episodes = docEp.select("div.entry-content").select("a");
+                                this.episodeAdd(episodes, title, mangaAdd);
+                            } catch (Exception ex) {
+                                ex.printStackTrace();
+                            }
                         }
                     }
 

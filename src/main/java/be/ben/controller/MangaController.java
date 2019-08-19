@@ -277,7 +277,9 @@ public class MangaController {
 
         for (int i=0;i<m.size();i++) {
             Optional<MangaGenerale> mm= mangaGeneraleService.findById(m.get(i).getId());
-            m.get(i).setAnimeListList(mm.get().getAnimeListList());
+              if(mm.isPresent()){
+                m.get(i).setAnimeListList(mm.get().getAnimeListList());
+            }
         }
         return m;
     }
