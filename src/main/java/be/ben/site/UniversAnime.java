@@ -178,17 +178,32 @@ public class UniversAnime extends Site {
                             ep = ep.replace("0", "");
                         }
                         Episode e =episodeService.findByTitleMangaAndType(title,"UniversAnime",ep);
-                        if(e==null) {
-                            episodeId.setNumEp(ep);
-                            episodeId.setTitleManga(title);
-                            episodeId.setType(mangaAdd.getType());
-                            Episode episode = new Episode();
-                            episode.setEpisode_id(episodeId);
-                            episode.setManga(mangaAdd);
+                        episodeId.setNumEp(ep);
+                        episodeId.setTitleManga(title);
+                        episodeId.setType(mangaAdd.getType());
+                        Episode episode = new Episode();
+                        episode.setEpisode_id(episodeId);
+                        episode.setManga(mangaAdd);
+                        if(url.contains("https://www.")){
                             episode.setUrl(url);
-                            episodeService.save(episode);
-                            addVideo(episode);
+                        }else {
+                            episode.setUrl(this.urlSite+url);
                         }
+
+                        if(e==null) {
+                            episodeService.save(episode);
+                            try {
+                                addVideo(episode);
+                            } catch (Exception ex) {
+                                ex.printStackTrace();
+                            }
+                        }else {
+                        try {
+                            addVideo(episode);
+                        } catch (Exception ex) {
+                            ex.printStackTrace();
+                        }
+                    }
                     }
                 } catch (Exception ex) {
                     ex.printStackTrace();
@@ -204,18 +219,24 @@ public class UniversAnime extends Site {
             Elements elements = doc.select("a[target=iframe_a]");
             for (Element e : elements) {
                 String urlVideo = e.attr("href");
-                Video video = new Video();
-                video.setEpisode(episode);
-                video.setUrl(urlVideo);
-                videoService.save(video);
+                if(videoService.findVideoByUrlAndEpisode(urlVideo,episode)==null){
+                    Video video = new Video();
+                    video.setEpisode(episode);
+                    video.setUrl(urlVideo);
+                    videoService.save(video);
+                }
+
             }
             elements = doc.select("iframe");
             for (Element e : elements) {
                 String urlVideo = e.attr("src");
-                Video video = new Video();
-                video.setEpisode(episode);
-                video.setUrl(urlVideo);
-                videoService.save(video);
+                if(videoService.findVideoByUrlAndEpisode(urlVideo,episode)==null){
+                    Video video = new Video();
+                    video.setEpisode(episode);
+                    video.setUrl(urlVideo);
+                    videoService.save(video);
+                }
+
             }
 
         } catch (IOException e) {

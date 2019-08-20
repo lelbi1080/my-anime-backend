@@ -61,7 +61,7 @@ public class FullAnime extends Site {
             List<Element> list=lis.subList(6,(lis.size()/2)-1);
             list.forEach((e)->{
                 try{
-                    HashMap<Integer,String> findEpisode= new HashMap<>();
+
                     String href = e.select("a").attr("href");
                     System.out.println(href);
                     if(!href.contains("www")){
@@ -75,20 +75,44 @@ public class FullAnime extends Site {
                         mangaAdd.setType("FullAnime");
                         mangaAdd.setTitle(title);
                         mangaAdd.setTitleOriginal(title);
-                        //mangaService.save(mangaAdd);
-                        Document docEp=null;
-                       try {
-                            docEp = Jsoup.connect(href).timeout(60000)
-                                    .userAgent("Mozilla")
-                                    .get();
-                            Elements episodes = docEp.select("div[class=td-block-span6]");
-                            Optional<Element> elementOptional =episodes.stream().filter((a)->{
-                                String hrefEp = a.select("a").attr("href");
-                                int start = hrefEp.indexOf("ode-")+4;
-                                int end = hrefEp.indexOf("-vostfr");
-                                return hrefEp.substring(start,end).chars().allMatch( Character::isDigit );
+                        mangaService.save(mangaAdd);
+                        recupEp(href,title,mangaAdd);
 
-                            }).findFirst();
+                    }else {
+                        mangaAdd=mangaFind;
+                        if(mangaAdd.getEpisodes().size()==0){
+                            recupEp(href,title,mangaAdd);
+                        }
+                    }
+
+                } catch (Exception exx) {
+                    exx.printStackTrace();
+                }
+
+
+            });
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    public void recupEp(String href,String title,Manga mangaAdd){
+        HashMap<Integer,String> findEpisode= new HashMap<>();
+        Document docEp=null;
+        try {
+            docEp = Jsoup.connect(href).timeout(60000)
+                    .userAgent("Mozilla")
+                    .get();
+            Elements episodes = docEp.select("div[class=td-block-span6]");
+            Optional<Element> elementOptional =episodes.stream().filter((a)->{
+                String hrefEp = a.select("a").attr("href");
+                int start = hrefEp.indexOf("ode-")+4;
+                int end = hrefEp.indexOf("-vos");
+                return hrefEp.substring(start,end).chars().allMatch( Character::isDigit );
+
+            }).findFirst();
 
                           /* List<Element> eps =episodes.stream().filter((a)->{
                                String hrefEp = a.select("a").attr("href");
@@ -123,61 +147,67 @@ public class FullAnime extends Site {
                                 }
                             }*/
 
-                           if(elementOptional.isPresent()){
-                               List<Element> eps =episodes.stream().filter((a)->{
-                                   String hrefEp = a.select("a").attr("href");
-                                   int start = hrefEp.indexOf("ode-")+4;
-                                   int end = hrefEp.indexOf("-vost");
-                                   return hrefEp.substring(start,end).chars().allMatch( Character::isDigit );
-                               }).collect(Collectors.toList());
-                               String hrefEp="";
-                               if(eps.size()>1){
-                                   hrefEp=eps.get(1).select("a").attr("href");
-                               }else {
-                                   hrefEp=elementOptional.get().select("a").attr("href");
-                               }
+            if(elementOptional.isPresent()){
+                List<Element> eps =episodes.stream().filter((a)->{
+                    String hrefEp = a.select("a").attr("href");
+                    int start = hrefEp.indexOf("ode-")+4;
+                    int end = hrefEp.indexOf("-vos");
+                   if(hrefEp.contains("-vos")){
+                       return hrefEp.substring(start,end).chars().allMatch( Character::isDigit );
+                   }else {
+                       return false;
+                   }
 
-                               String numEp = elementOptional.get().select("a").attr("href");
-                               int start = numEp.indexOf("ode-")+4;
-                               int end = numEp.indexOf("-vost");
-                               String numEpM=numEp.substring(start,end);
-                               int nbEp=Integer.parseInt(numEpM);
-                               for(int i=nbEp;i>=1;i--){
-                                   String numEps="";
-                                   if(i<10){
-                                       numEps="0"+String.valueOf(i);
-                                   }else{
-                                       numEps=String.valueOf(i);
-                                   }
-                                   String value = hrefEp.subSequence(0,start)+numEps;
-                                   value=value+hrefEp.subSequence(end,numEp.length());
-                                   findEpisode.put(Integer.valueOf(numEps),value);
-                               }
-                           }
-
-
-                           if(findEpisode.size()>0){
-
-                               if(title.equals("Attack on Titan Saison 1")){
-                                   System.out.println();
-                               }
-                             //   episodeAdd(findEpisode,title,mangaAdd);
-                            }else {
-                            }
-                        } catch (Exception ex) {
-                            ex.printStackTrace();
-                        }
-                    }
-
-                } catch (Exception exx) {
-                    exx.printStackTrace();
+                }).collect(Collectors.toList());
+                String hrefEp="";
+                if(eps.size()>1){
+                    hrefEp=eps.get(1).select("a").attr("href");
+                }else {
+                    hrefEp=elementOptional.get().select("a").attr("href");
                 }
 
+                String numEp = elementOptional.get().select("a").attr("href");
+                int start = numEp.indexOf("ode-")+4;
+                int end = numEp.indexOf("-vos");
+                String numEpM=numEp.substring(start,end);
+                int nbEp=Integer.parseInt(numEpM);
+                for(int i=nbEp;i>=1;i--){
+                    String numEps="";
+                    if(i<10){
+                        numEps="0"+String.valueOf(i);
+                    }else{
+                        numEps=String.valueOf(i);
+                    }
+                    if(title.equals("Ace Attorney Saison 2")){
+                        System.out.println();
+                    }
+                    if(i==nbEp){
+                        String value = hrefEp.subSequence(0,start)+numEps;
+                        value=value+numEp.subSequence(end,numEp.length());
+                        findEpisode.put(Integer.valueOf(numEps),value);
+                    }else {
+                        String value = hrefEp.subSequence(0,start)+numEps;
+                        value=value+hrefEp.subSequence(end,hrefEp.length());
+                        findEpisode.put(Integer.valueOf(numEps),value);
+                    }
 
-            });
 
-        } catch (IOException e) {
-            e.printStackTrace();
+                }
+            }
+
+
+
+            if(findEpisode.size()>0){
+                System.out.println("ok video");
+
+                if(title.equals("Attack on Titan Saison 1")){
+                    System.out.println();
+                }
+                   episodeAdd(findEpisode,title,mangaAdd);
+            }else {
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }
 
@@ -296,6 +326,12 @@ public class FullAnime extends Site {
         Episode e = episodeService.findByTitleMangaAndType(title,"FullAnime",numEpM);
         if(e==null) {
             episodeService.save(episode);
+            try {
+                addVideo(episode);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }else {
             try {
                 addVideo(episode);
             } catch (Exception ex) {
